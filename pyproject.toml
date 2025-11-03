@@ -3,7 +3,7 @@ name = "depth-anything-3d"
 version = "0.1.0"
 description = "3D viewing extensions for Video-Depth-Anything with interactive mesh visualization and real-time rendering"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11,<3.13"
 license = {text = "Apache-2.0"}
 authors = [
     {name = "Video-Depth-Anything-3D Contributors"}
@@ -31,7 +31,6 @@ dependencies = [
     "scipy>=1.11.0",
     "matplotlib>=3.7.0",
     "decord>=0.6.0",
-    "xformers>=0.0.23",
 ]
 
 [project.optional-dependencies]
@@ -44,6 +43,9 @@ virtual-cam = [
 demo = [
     "gradio>=4.0.0",
 ]
+xformers = [
+    "xformers>=0.0.23",
+]
 dev = [
     "pytest>=7.0.0",
     "black>=23.0.0",
@@ -54,6 +56,7 @@ all = [
     "mss>=9.0.0",
     "pyvirtualcam>=0.10.0",
     "gradio>=4.0.0",
+    "xformers>=0.0.23",
 ]
 
 [project.urls]
@@ -89,3 +92,21 @@ python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
+
+[tool.uv]
+# UV-specific configuration for GPU acceleration
+
+# Use unsafe-best-match to allow packages from PyTorch's custom index
+index-strategy = "unsafe-best-match"
+
+# Add PyTorch CUDA repository
+[[tool.uv.index]]
+name = "pytorch-cu121"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true
+
+# Specify that torch and torchvision should come from CUDA index
+# xformers will use PyPI (has Windows wheels)
+[tool.uv.sources]
+torch = { index = "pytorch-cu121" }
+torchvision = { index = "pytorch-cu121" }

@@ -20,6 +20,12 @@ from da3d.cli.legacy import main as legacy_main
 
 def main():
     """Entry point for da3d CLI."""
+    # Handle 'status' command before importing dependencies
+    if len(sys.argv) > 1 and sys.argv[1] == 'status':
+        from da3d.cli.status import show_status
+        show_status()
+        return
+
     try:
         legacy_main()
     except ImportError as e:

@@ -76,7 +76,7 @@ def video_command(args):
     else:
         process_video_batch(args, video_depth_anything, DEVICE)
 
-    print(f"✓ Processing complete! Output saved to: {args.output_dir}")
+    print(f"[OK] Processing complete! Output saved to: {args.output_dir}")
 
 
 def process_video_batch(args, model, device):
@@ -201,7 +201,7 @@ def webcam_command(args):
             # Test if we can actually read a frame
             ret, test_frame = cap.read()
             if ret:
-                print(f"✓ Successfully opened camera using {name}")
+                print(f"[OK] Successfully opened camera using {name}")
                 break
             else:
                 print(f"  {name} opened but couldn't read frames")
@@ -640,7 +640,7 @@ def screen3d_command(args):
             output_h = min(monitor['height'], args.max_res) if args.max_res > 0 else monitor['height']
 
             vcam = pyvirtualcam.Camera(width=output_w, height=output_h, fps=args.fps)
-            print(f"✓ Virtual camera started: {output_w}x{output_h}@{args.fps}fps")
+            print(f"[OK] Virtual camera started: {output_w}x{output_h}@{args.fps}fps")
             print(f"  You can now add 'OBS Virtual Camera' as a source in OBS Studio")
         except Exception as e:
             print(f"Warning: Could not initialize virtual camera: {e}")
@@ -1050,7 +1050,7 @@ def webcam3d_command(args):
         if cap.isOpened():
             ret, test_frame = cap.read()
             if ret:
-                print(f"✓ Successfully opened camera using {name}")
+                print(f"[OK] Successfully opened camera using {name}")
                 break
             else:
                 cap.release()

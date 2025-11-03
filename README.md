@@ -22,61 +22,116 @@ Transform depth maps into stunning 3D visualizations with full camera control, r
 
 ### Installation
 
+**Recommended: Using uv (faster, better dependency management)**
+
 ```bash
 # Clone the repository
 git clone https://github.com/ricklon/depth-anything-3d-viewer
 cd depth-anything-3d-viewer
 
+# Sync dependencies with uv
+uv sync
+
+# Install Video-Depth-Anything dependency
+uv pip install -e ../Video-Depth-Anything
+
+# Check installation status
+uv run da3d status
+```
+
+**Alternative: Using pip**
+
+```bash
 # Install with pip
 pip install -e .
 
-# Or with uv (recommended)
-uv pip install -e .
-
 # Install with optional dependencies
 pip install -e ".[all]"  # Screen capture + virtual cam + demo
+
+# Install Video-Depth-Anything (required dependency)
+cd ..
+git clone https://github.com/DepthAnything/Video-Depth-Anything
+cd Video-Depth-Anything
+pip install -e .
+cd ../depth-anything-3d-viewer
 ```
 
 ### Download Depth Model Checkpoints
 
-The package requires Video-Depth-Anything model checkpoints:
+Download at least the Small model (recommended for real-time use):
 
 ```bash
 # Create checkpoints directory
-mkdir checkpoints
+mkdir -p checkpoints
 cd checkpoints
 
-# Download models (choose one or more)
-wget https://huggingface.co/depth-anything/Video-Depth-Anything-Small/resolve/main/video_depth_anything_vits.pth
-wget https://huggingface.co/depth-anything/Video-Depth-Anything-Base/resolve/main/video_depth_anything_vitb.pth
-wget https://huggingface.co/depth-anything/Video-Depth-Anything-Large/resolve/main/video_depth_anything_vitl.pth
+# Download Small model (112MB, fastest, recommended)
+curl -L -O https://huggingface.co/depth-anything/Video-Depth-Anything-Small/resolve/main/video_depth_anything_vits.pth
+
+# Optional: Download other models
+# Base model (388MB, balanced)
+curl -L -O https://huggingface.co/depth-anything/Video-Depth-Anything-Base/resolve/main/video_depth_anything_vitb.pth
+
+# Large model (1.3GB, best quality)
+curl -L -O https://huggingface.co/depth-anything/Video-Depth-Anything-Large/resolve/main/video_depth_anything_vitl.pth
+
+cd ..
 ```
 
 ### Usage
 
+**If using uv (recommended):**
+
 ```bash
 # View yourself in 3D mesh (webcam)
-da3d webcam3d
+uv run da3d webcam3d
+
+# Use camera 1 instead of camera 0
+uv run da3d webcam3d --camera-id 1
 
 # View as point cloud instead
-da3d webcam3d --display-mode pointcloud
+uv run da3d webcam3d --display-mode pointcloud
 
-# Capture screen in 3D
-da3d screen3d-viewer
+# Capture screen in 3D (interactive mesh)
+uv run da3d screen3d-viewer
+
+# Fast mode for better FPS
+uv run da3d screen3d-viewer --subsample 4 --max-res 320
 
 # View static depth map
-da3d view3d image.jpg depth.png
-
-# View as point cloud
-da3d view3d image.jpg depth.png --display-mode pointcloud
+uv run da3d view3d image.jpg depth.png
 
 # 2.5D parallax screen capture
-da3d screen3d --auto-rotate
+uv run da3d screen3d --auto-rotate
 
 # Get help
-da3d --help
-da3d webcam3d --help
+uv run da3d --help
+uv run da3d webcam3d --help
 ```
+
+**If using pip:**
+
+```bash
+# Replace 'uv run da3d' with just 'da3d'
+da3d webcam3d
+da3d webcam3d --camera-id 1
+da3d screen3d-viewer
+```
+
+## Quick Reference
+
+| Command | Description | Common Options |
+|---------|-------------|----------------|
+| `uv run da3d webcam3d` | View webcam in interactive 3D mesh | `--camera-id 1` `--display-mode pointcloud` |
+| `uv run da3d screen3d-viewer` | View desktop/screen in 3D mesh | `--subsample 4 --max-res 320` (fast mode) |
+| `uv run da3d view3d img.jpg depth.png` | View static depth map in 3D | `--depth-scale 0.8` `--display-mode pointcloud` |
+| `uv run da3d screen3d --auto-rotate` | 2.5D parallax screen effect | `--mouse-control` `--virtual-cam` |
+
+**3D Viewer Controls (all commands):**
+- **Mouse drag:** Rotate 3D view
+- **Mouse wheel:** Zoom in/out
+- **Shift + drag:** Pan camera
+- **Q or ESC:** Exit
 
 ## Commands
 
@@ -85,45 +140,89 @@ da3d webcam3d --help
 View yourself as a live-updating 3D mesh:
 
 ```bash
-# Basic usage (optimized defaults)
-da3d webcam3d
+# Basic usage (optimized defaults, camera 0)
+uv run da3d webcam3d
+
+# Select specific camera (0, 1, 2, etc.)
+uv run da3d webcam3d --camera-id 1
+
+# Select camera with custom resolution
+uv run da3d webcam3d --camera-id 1 --camera-width 1920 --camera-height 1080
 
 # Point cloud mode (faster, different aesthetic)
-da3d webcam3d --display-mode pointcloud
+uv run da3d webcam3d --display-mode pointcloud
 
 # Fast performance mode
-da3d webcam3d --subsample 4 --max-res 320
+uv run da3d webcam3d --subsample 4 --max-res 320
 
 # High quality mesh
-da3d webcam3d --subsample 2 --max-res 640 --smooth
+uv run da3d webcam3d --subsample 2 --max-res 640 --smooth
 
 # Custom depth range (reduce background)
-da3d webcam3d --depth-max-percentile 80
+uv run da3d webcam3d --depth-max-percentile 80
+
+# Adjust depth effect strength
+uv run da3d webcam3d --depth-scale 0.8
 ```
 
 **Controls:**
 - Mouse drag: Rotate camera 360°
 - Mouse wheel: Zoom in/out
 - Shift + drag: Pan camera
-- Close window to exit
+- Q or ESC: Close window and exit
+
+**How to find your camera ID:**
+```bash
+# Test camera 0
+uv run da3d webcam3d --camera-id 0
+
+# Test camera 1
+uv run da3d webcam3d --camera-id 1
+
+# Continue testing until you find your camera
+```
 
 ### `screen3d-viewer` - Screen Capture 3D
 
-Turn your screen into an interactive 3D scene:
+Turn your screen/desktop into an interactive 3D scene that you can rotate and explore:
 
 ```bash
-# Capture primary monitor
-da3d screen3d-viewer
+# Capture primary monitor in 3D mesh
+uv run da3d screen3d-viewer
 
-# Specific region
-da3d screen3d-viewer --region 0,0,1920,1080
+# Fast mode (better FPS for real-time viewing)
+uv run da3d screen3d-viewer --subsample 4 --max-res 320
 
-# Gaming mode (aggressive depth clamping)
-da3d screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 90
+# Balanced mode (good quality and performance)
+uv run da3d screen3d-viewer --subsample 3 --max-res 480
 
-# Fast performance
-da3d screen3d-viewer --subsample 4 --fps 15
+# High quality (slower but better mesh)
+uv run da3d screen3d-viewer --subsample 2 --max-res 640
+
+# Point cloud mode instead of mesh
+uv run da3d screen3d-viewer --display-mode pointcloud
+
+# Gaming mode (aggressive depth clamping for better 3D)
+uv run da3d screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 90
+
+# Adjust 3D depth effect
+uv run da3d screen3d-viewer --depth-scale 0.8
+
+# Custom background color (RGB 0-1 range)
+uv run da3d screen3d-viewer --background 0.2,0.2,0.3
 ```
+
+**Controls:**
+- Mouse drag: Rotate 3D view
+- Mouse wheel: Zoom in/out
+- Shift + drag: Pan camera
+- Q or ESC: Close window and exit
+
+**Use Cases:**
+- View game footage in true 3D
+- Explore photos/videos as interactive 3D scenes
+- Create 3D presentations from 2D content
+- Analyze depth in videos and streams
 
 ### `view3d` - Static 3D Viewing
 
@@ -131,41 +230,48 @@ Explore static depth maps interactively:
 
 ```bash
 # Basic viewing (mesh mode)
-da3d view3d image.jpg depth.png
+uv run da3d view3d image.jpg depth.png
 
 # View as point cloud
-da3d view3d image.jpg depth.png --display-mode pointcloud
+uv run da3d view3d image.jpg depth.png --display-mode pointcloud
 
 # Adjust depth range for better visualization
-da3d view3d image.jpg depth.png --depth-min-percentile 5 --depth-max-percentile 95
+uv run da3d view3d image.jpg depth.png --depth-min-percentile 5 --depth-max-percentile 95
 
 # High quality with full resolution
-da3d view3d image.jpg depth.png --subsample 1 --depth-scale 0.7
+uv run da3d view3d image.jpg depth.png --subsample 1 --depth-scale 0.7
 
 # Wireframe mesh mode
-da3d view3d image.jpg depth.png --wireframe
+uv run da3d view3d image.jpg depth.png --wireframe
 
 # Point cloud with adjusted depth
-da3d view3d image.jpg depth.png --display-mode pointcloud --depth-scale 0.8
+uv run da3d view3d image.jpg depth.png --display-mode pointcloud --depth-scale 0.8
 ```
+
+**Controls:**
+- Same as webcam3d and screen3d-viewer
+- Mouse drag to rotate, wheel to zoom, Shift+drag to pan
+- Q or ESC to exit
 
 ### `screen3d` - 2.5D Parallax Effects
 
-Real-time screen capture with cinematic parallax:
+Real-time screen capture with cinematic parallax effects (not full 3D, but parallax projection):
 
 ```bash
-# Auto-rotating parallax
-da3d screen3d --auto-rotate
+# Auto-rotating parallax effect
+uv run da3d screen3d --auto-rotate
 
 # Mouse-controlled parallax
-da3d screen3d --mouse-control
+uv run da3d screen3d --mouse-control
 
-# With virtual camera output (for OBS)
-da3d screen3d --virtual-cam --mouse-control
+# With virtual camera output (for OBS streaming)
+uv run da3d screen3d --virtual-cam --mouse-control
 
-# Show displacement visualization (debug)
-da3d screen3d --show-displacement --test-grid
+# Show displacement visualization (debug mode)
+uv run da3d screen3d --show-displacement --test-grid
 ```
+
+**Note:** `screen3d` creates 2.5D parallax effects, while `screen3d-viewer` creates true interactive 3D meshes.
 
 ## Python API
 
@@ -228,13 +334,13 @@ projected = projector.project_with_parallax(
 **Examples:**
 ```bash
 # More aggressive background removal
-da3d webcam3d --depth-max-percentile 80
+uv run da3d webcam3d --depth-max-percentile 80
 
 # Focus on mid-range depth
-da3d screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 85
+uv run da3d screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 85
 
 # Full depth range (no clamping)
-da3d view3d image.jpg depth.png --depth-min-percentile 0 --depth-max-percentile 100
+uv run da3d view3d image.jpg depth.png --depth-min-percentile 0 --depth-max-percentile 100
 ```
 
 ### Performance Tuning
@@ -249,13 +355,13 @@ da3d view3d image.jpg depth.png --depth-min-percentile 0 --depth-max-percentile 
 **Performance Tiers:**
 ```bash
 # Maximum FPS (15-20 FPS)
-da3d webcam3d --subsample 4 --max-res 320
+uv run da3d webcam3d --subsample 4 --max-res 320
 
 # Balanced (8-12 FPS, default)
-da3d webcam3d --subsample 3 --max-res 480
+uv run da3d webcam3d --subsample 3 --max-res 480
 
 # High Quality (4-6 FPS)
-da3d webcam3d --subsample 2 --max-res 640 --smooth
+uv run da3d webcam3d --subsample 2 --max-res 640 --smooth
 ```
 
 ### 3D Appearance
@@ -297,11 +403,32 @@ See the `examples/` directory for complete Python examples:
 
 ## Requirements
 
-- Python 3.9+
-- PyTorch 2.0+ with CUDA (recommended) or CPU
+- Python 3.11+ (3.12 recommended)
+- **NVIDIA GPU with CUDA** (highly recommended for real-time performance)
+- PyTorch 2.0+ with CUDA support
 - Open3D 0.18+ (for 3D viewing)
 - OpenCV 4.8+
 - NumPy, SciPy
+
+### GPU Acceleration (Recommended)
+
+**GPU acceleration provides 10-20x faster performance!**
+
+The project is configured for CUDA 12.1 by default. After installation:
+
+```bash
+# Verify GPU is detected
+uv run python -c "import torch; print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"CPU only\"}')"
+```
+
+If you see "CPU only", follow the [GPU Setup Guide](GPU_SETUP.md) for detailed instructions.
+
+**Quick GPU fix:**
+```bash
+# Remove CPU-only environment and reinstall with GPU support
+rm -rf .venv
+uv sync
+```
 
 ### Optional Dependencies
 
@@ -339,42 +466,97 @@ da3d/
 
 ## Troubleshooting
 
+### Check Installation Status
+
+Run the diagnostic tool to verify your installation:
+
+```bash
+uv run da3d status
+```
+
+This will check:
+- Python version compatibility
+- All required dependencies
+- GPU/CUDA availability
+- Model checkpoints
+- Optional dependencies
+
+### Installation issues with xformers (Windows)
+
+If you see build errors related to `xformers` during `uv sync`:
+
+**Solution:** xformers is now optional and not required for this package. The package will install without it.
+
+If you specifically need xformers for optimization, install it separately after the main installation:
+```bash
+uv pip install xformers --index-url https://download.pytorch.org/whl/cu121
+```
+
+### 3D viewer window not appearing
+
+The Open3D window should open automatically with the title "Real-Time 3D Depth Viewer" or "3D Depth Viewer":
+- Check your taskbar for a new window
+- Try Alt+Tab to switch between windows
+- The window might be behind other windows
+- On some systems, it may take a few seconds to appear
+
+### Camera not found (webcam3d)
+
+Test different camera IDs:
+```bash
+# Try camera 0
+uv run da3d webcam3d --camera-id 0
+
+# Try camera 1
+uv run da3d webcam3d --camera-id 1
+
+# Continue testing with 2, 3, etc.
+```
+
 ### Face/body cut off in webcam mode
 
 The default 0-90% depth range should prevent this. If still cut off:
 ```bash
-da3d webcam3d --depth-max-percentile 95
+uv run da3d webcam3d --depth-max-percentile 95
 ```
 
 ### Too much background noise
 
 ```bash
-da3d webcam3d --depth-max-percentile 80
+uv run da3d webcam3d --depth-max-percentile 80
 ```
 
 ### Mesh looks too flat
 
 ```bash
-da3d view3d image.jpg depth.png --depth-scale 0.8
+uv run da3d view3d image.jpg depth.png --depth-scale 0.8
 ```
 
 ### Depth looks too extreme/stretched
 
 ```bash
-da3d view3d image.jpg depth.png --depth-scale 0.3
+uv run da3d view3d image.jpg depth.png --depth-scale 0.3
 ```
 
-### Performance issues
+### Performance issues (low FPS)
 
 ```bash
-da3d webcam3d --subsample 4 --max-res 320
+uv run da3d webcam3d --subsample 4 --max-res 320
+uv run da3d screen3d-viewer --subsample 4 --max-res 320
 ```
 
 ### Model checkpoints not found
 
 Ensure checkpoints are in `./checkpoints/` or specify path:
 ```bash
-da3d webcam3d --checkpoints-dir /path/to/checkpoints
+uv run da3d webcam3d --checkpoints-dir /path/to/checkpoints
+```
+
+Download checkpoints if missing:
+```bash
+cd checkpoints
+curl -L -O https://huggingface.co/depth-anything/Video-Depth-Anything-Small/resolve/main/video_depth_anything_vits.pth
+cd ..
 ```
 
 ## Credits

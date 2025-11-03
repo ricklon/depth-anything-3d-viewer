@@ -465,15 +465,17 @@ class RealTime3DViewer:
             self.vis.add_geometry(self.geometry)
         else:
             # Subsequent frames: update geometry
-            self.geometry.points = new_geometry.points
-            self.geometry.colors = new_geometry.colors
-
-            # Update additional attributes based on geometry type
             if isinstance(new_geometry, o3d.geometry.TriangleMesh):
+                # Triangle mesh uses vertices, not points
+                self.geometry.vertices = new_geometry.vertices
+                self.geometry.vertex_colors = new_geometry.vertex_colors
                 self.geometry.triangles = new_geometry.triangles
                 self.geometry.compute_vertex_normals()
             else:
-                # Point cloud - copy normals if available
+                # Point cloud uses points
+                self.geometry.points = new_geometry.points
+                self.geometry.colors = new_geometry.colors
+                # Copy normals if available
                 if new_geometry.has_normals():
                     self.geometry.normals = new_geometry.normals
 
