@@ -43,13 +43,13 @@ uv run vda screen3d-viewer --fps 15
 ### Portrait Mode (Webcam)
 ```bash
 # Best settings for viewing yourself in 3D
-uv run vda webcam3d --depth-scale 150 --subsample 3 --max-res 480
+uv run vda webcam3d --depth-scale 0.6 --subsample 3 --max-res 480
 ```
 
 ### Gaming Scene (Screen)
 ```bash
 # Capture game window and view in 3D
-uv run vda screen3d-viewer --region 0,0,1920,1080 --depth-scale 120 --fps 10
+uv run vda screen3d-viewer --region 0,0,1920,1080 --depth-scale 0.5 --fps 10
 ```
 
 ### High Quality (Slower)
@@ -79,9 +79,18 @@ uv run vda webcam3d --subsample 4 --max-res 320
 
 **3D Visualization:**
 ```bash
---depth-scale FLOAT        # Z-displacement scale (default: 100.0)
+--depth-scale FLOAT        # Z-displacement scale (default: 0.5)
+                          # Range: 0.1-2.0, where 1.0 = depth spans half image width
                           # Higher = more dramatic depth
-                          # Try 80-150 for most scenes
+                          # Try 0.3-0.7 for most scenes
+
+--depth-min-percentile FLOAT  # Clamp near depth (default: 0 for webcam, 5 for screen)
+                              # Range: 0-100
+                              # Higher values remove close objects
+
+--depth-max-percentile FLOAT  # Clamp far depth (default: 95)
+                              # Range: 0-100
+                              # Lower values remove background
 
 --subsample INT           # Mesh downsample factor (default: 3)
                           # 2 = high quality (slower)
@@ -195,7 +204,7 @@ The mesh updates automatically as new frames arrive from your webcam or screen.
 ### 1. Live Portrait 3D Scanning
 
 ```bash
-uv run vda webcam3d --depth-scale 150 --subsample 3
+uv run vda webcam3d --depth-scale 0.6 --subsample 3
 ```
 
 View yourself in 3D! Move your head slowly to see the depth update. The mesh stays centered on the camera's view.
@@ -204,7 +213,7 @@ View yourself in 3D! Move your head slowly to see the depth update. The mesh sta
 
 ```bash
 # Capture game window
-uv run vda screen3d-viewer --region 0,0,1920,1080 --depth-scale 100
+uv run vda screen3d-viewer --region 0,0,1920,1080 --depth-scale 0.5
 ```
 
 Turn your game into a 3D scene. Orbit around to see how the depth estimation works on different game graphics.
@@ -212,7 +221,7 @@ Turn your game into a 3D scene. Orbit around to see how the depth estimation wor
 ### 3. Video Conferencing Background
 
 ```bash
-uv run vda webcam3d --invert-depth --depth-scale 120
+uv run vda webcam3d --invert-depth --depth-scale 0.5
 ```
 
 See yourself with inverted depth for interesting visual effects.
@@ -301,14 +310,29 @@ uv sync --extra metric
 
 - Increase `--depth-scale`:
   ```bash
-  --depth-scale 150
+  --depth-scale 0.7
   ```
 
 ### Mesh Too Distorted
 
 - Decrease `--depth-scale`:
   ```bash
-  --depth-scale 75
+  --depth-scale 0.3
+  ```
+
+### Too Much Background Clutter (Webcam)
+
+- Lower maximum percentile:
+  ```bash
+  --depth-max-percentile 85
+  ```
+
+### Face/Body Cut Off (Webcam)
+
+- Already fixed with default 0-95% range!
+- If still an issue, increase max percentile:
+  ```bash
+  --depth-max-percentile 98
   ```
 
 ### Camera Not Opening
@@ -342,14 +366,16 @@ uv sync --extra metric
 ### Custom Python Integration
 
 ```python
-from utils.viewer_3d import RealTime3DViewer
+from da3d.viewing import RealTime3DViewer
 import cv2
 
 # Create viewer
 viewer = RealTime3DViewer(
-    depth_scale=120,
+    depth_scale=0.5,
     subsample=3,
     smooth_mesh=False,
+    depth_min_percentile=0.0,
+    depth_max_percentile=95.0,
     background_color=(0.1, 0.1, 0.1)
 )
 
@@ -421,13 +447,13 @@ for cam_id in cameras:
 uv run vda webcam  # Verify webcam works
 
 # Step 2: Start 3D viewer with good defaults
-uv run vda webcam3d --depth-scale 140 --subsample 3
+uv run vda webcam3d --depth-scale 0.6 --subsample 3
 
 # Step 3: Adjust depth scale while viewing
-# (Restart with different --depth-scale values)
+# (Restart with different --depth-scale values: try 0.4, 0.5, 0.7)
 
 # Step 4: Enable smoothing if needed
-uv run vda webcam3d --depth-scale 140 --subsample 3 --smooth
+uv run vda webcam3d --depth-scale 0.6 --subsample 3 --smooth
 ```
 
 ### Workflow 2: Screen Game Analysis
@@ -437,13 +463,16 @@ uv run vda webcam3d --depth-scale 140 --subsample 3 --smooth
 # (Use Windows Snipping Tool or similar to get coordinates)
 
 # Step 2: Start viewer with region
-uv run vda screen3d-viewer --region 100,100,1920,1080 --depth-scale 100
+uv run vda screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5
 
 # Step 3: Tune for performance
-uv run vda screen3d-viewer --region 100,100,1920,1080 --depth-scale 100 --max-res 400 --subsample 4
+uv run vda screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5 --max-res 400 --subsample 4
 
 # Step 4: Increase quality once performance is acceptable
-uv run vda screen3d-viewer --region 100,100,1920,1080 --depth-scale 100 --max-res 480 --subsample 3
+uv run vda screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5 --max-res 480 --subsample 3
+
+# Step 5: Reduce background clutter if needed
+uv run vda screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5 --depth-max-percentile 85
 ```
 
 ## See Also

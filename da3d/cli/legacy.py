@@ -1101,10 +1101,12 @@ def webcam3d_command(args):
                     depth_scale=args.depth_scale,
                     subsample=args.subsample,
                     smooth_mesh=args.smooth,
+                    max_depth_threshold=args.depth_threshold,
                     depth_min_percentile=args.depth_min_percentile,
                     depth_max_percentile=args.depth_max_percentile,
                     background_color=tuple(float(x) for x in args.background.split(',')),
-                    display_mode=args.display_mode
+                    display_mode=args.display_mode,
+                    use_raw_depth=args.raw_depth
                 )
                 viewer_3d.initialize(width=1280, height=720)
                 print(f"Initialized 3D viewer: {w}x{h} ({args.display_mode} mode)")
@@ -1214,10 +1216,12 @@ def screen3d_viewer_command(args):
                     depth_scale=args.depth_scale,
                     subsample=args.subsample,
                     smooth_mesh=args.smooth,
+                    max_depth_threshold=args.depth_threshold,
                     depth_min_percentile=args.depth_min_percentile,
                     depth_max_percentile=args.depth_max_percentile,
                     background_color=tuple(float(x) for x in args.background.split(',')),
-                    display_mode=args.display_mode
+                    display_mode=args.display_mode,
+                    use_raw_depth=args.raw_depth
                 )
                 viewer_3d.initialize(width=1280, height=720)
                 print(f"Initialized 3D viewer: {w}x{h} ({args.display_mode} mode)")
@@ -1445,8 +1449,12 @@ Examples:
                                 help='Z-displacement scale (0.1-2.0, where 1.0 = depth spans half image width, default: 0.5)')
     webcam3d_parser.add_argument('--depth-min-percentile', type=float, default=0.0,
                                 help='Clamp near depth at this percentile (default: 0, preserves foreground)')
-    webcam3d_parser.add_argument('--depth-max-percentile', type=float, default=90.0,
-                                help='Clamp far depth at this percentile (default: 90, reduces background extremes)')
+    webcam3d_parser.add_argument('--depth-max-percentile', type=float, default=95.0,
+                                help='Clamp far depth at this percentile (default: 95, reduces background extremes while preserving detail)')
+    webcam3d_parser.add_argument('--depth-threshold', type=float, default=1.0,
+                                help='Filter pixels beyond this depth percentile (0-1, default: 1.0 keeps all pixels, 0.95 removes farthest 5%%)')
+    webcam3d_parser.add_argument('--raw-depth', action='store_true',
+                                help='Use raw depth values without normalization (preserves more detail, requires lower --depth-scale like 0.1-0.3)')
     webcam3d_parser.add_argument('--display-mode', type=str, default='mesh', choices=['mesh', 'pointcloud'],
                                 help='Display mode: mesh (triangle mesh) or pointcloud (point cloud)')
     webcam3d_parser.add_argument('--subsample', type=int, default=3,
@@ -1482,6 +1490,10 @@ Examples:
                                        help='Clamp near depth at this percentile (default: 5, reduces extremes)')
     screen3d_viewer_parser.add_argument('--depth-max-percentile', type=float, default=95.0,
                                        help='Clamp far depth at this percentile (default: 95, reduces extremes)')
+    screen3d_viewer_parser.add_argument('--depth-threshold', type=float, default=1.0,
+                                       help='Filter pixels beyond this depth percentile (0-1, default: 1.0 keeps all pixels, 0.95 removes farthest 5%%)')
+    screen3d_viewer_parser.add_argument('--raw-depth', action='store_true',
+                                       help='Use raw depth values without normalization (preserves more detail, requires lower --depth-scale like 0.1-0.3)')
     screen3d_viewer_parser.add_argument('--display-mode', type=str, default='mesh', choices=['mesh', 'pointcloud'],
                                        help='Display mode: mesh (triangle mesh) or pointcloud (point cloud)')
     screen3d_viewer_parser.add_argument('--subsample', type=int, default=3,

@@ -36,7 +36,8 @@ class DepthMeshViewer:
         max_depth_threshold: float = 0.95,
         depth_min_percentile: float = 0.0,
         depth_max_percentile: float = 100.0,
-        display_mode: str = 'mesh'
+        display_mode: str = 'mesh',
+        use_raw_depth: bool = False
     ):
         """
         Initialize the 3D mesh viewer.
@@ -47,12 +48,14 @@ class DepthMeshViewer:
             depth_min_percentile: Clamp depth values below this percentile (0-100)
             depth_max_percentile: Clamp depth values above this percentile (0-100)
             display_mode: Display mode - 'mesh' for triangle mesh, 'pointcloud' for point cloud
+            use_raw_depth: If True, use raw depth values without normalizing to 0-1 (preserves more detail)
         """
         self.depth_scale = depth_scale
         self.max_depth_threshold = max_depth_threshold
         self.depth_min_percentile = depth_min_percentile
         self.depth_max_percentile = depth_max_percentile
         self.display_mode = display_mode
+        self.use_raw_depth = use_raw_depth
 
     def create_mesh_from_depth(
         self,
@@ -96,29 +99,45 @@ class DepthMeshViewer:
         # Clamp depth to the percentile range
         depth_clamped = np.clip(depth, depth_min, depth_max)
 
-        # Normalize to 0-1 range
-        if depth_max - depth_min > 1e-8:
-            depth_normalized = (depth_clamped - depth_min) / (depth_max - depth_min)
+        # Optionally normalize to 0-1 range (or keep raw values for more detail)
+        if self.use_raw_depth:
+            # Use raw depth values - preserves full dynamic range
+            depth_normalized = depth_clamped - depth_min  # Shift to start from 0
         else:
-            depth_normalized = np.zeros_like(depth_clamped)
+            # Normalize to 0-1 range (traditional approach)
+            if depth_max - depth_min > 1e-8:
+                depth_normalized = (depth_clamped - depth_min) / (depth_max - depth_min)
+            else:
+                depth_normalized = np.zeros_like(depth_clamped)
 
         # Optional: Filter out far background (often noisy)
         depth_threshold = np.percentile(depth, self.max_depth_threshold * 100)
-        mask = depth < depth_threshold
+        mask = depth <= depth_threshold  # Fixed: include pixels equal to threshold
 
         # Create coordinate grids
         x = np.arange(w)
         y = np.arange(h)
         x_grid, y_grid = np.meshgrid(x, y)
 
-        # Center the mesh
-        x_centered = x_grid - w / 2
-        y_centered = y_grid - h / 2
+        # Center the mesh and normalize by aspect ratio
+        # This ensures circular objects appear circular in 3D space
+        # Use the larger dimension as reference to maintain proper proportions
+        aspect_ratio = w / h
+        max_dim = max(w, h)
+
+        if w >= h:
+            # Landscape or square: normalize X to [-max_dim/2, max_dim/2], scale Y by aspect ratio
+            x_centered = x_grid - w / 2
+            y_centered = (y_grid - h / 2) * aspect_ratio
+        else:
+            # Portrait: normalize Y, scale X
+            x_centered = (x_grid - w / 2) / aspect_ratio
+            y_centered = y_grid - h / 2
 
         # Create 3D points: (X, Y, Z) where Z comes from depth
         # Scale Z proportionally to image dimensions so it matches X/Y coordinate space
-        # Use width as reference since X coordinates span [-w/2, w/2]
-        z_scale_factor = w * 0.5  # Z will span half the width when depth_scale=1.0
+        # Use the larger dimension as reference for consistent scaling
+        z_scale_factor = max_dim * 0.5  # Z will span half the max dimension when depth_scale=1.0
         z = depth_normalized * self.depth_scale * z_scale_factor
 
         # Stack into (H*W, 3) array
@@ -144,8 +163,10 @@ class DepthMeshViewer:
         # Return point cloud if in pointcloud mode
         if self.display_mode == 'pointcloud':
             # Estimate normals for better lighting
+            # Use smaller radius to preserve depth detail (3.0 instead of 10.0)
+            # Radius is in the same coordinate space as points (pixels after subsampling)
             pcd.estimate_normals(
-                search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=10.0, max_nn=30)
+                search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=3.0, max_nn=20)
             )
             return pcd
 
@@ -368,9 +389,10 @@ class RealTime3DViewer:
         smooth_mesh: bool = False,  # Disable smoothing for speed
         max_depth_threshold: float = 0.95,
         depth_min_percentile: float = 0.0,
-        depth_max_percentile: float = 90.0,
+        depth_max_percentile: float = 95.0,
         background_color: Tuple[float, float, float] = (0.1, 0.1, 0.1),
-        display_mode: str = 'mesh'
+        display_mode: str = 'mesh',
+        use_raw_depth: bool = False
     ):
         """
         Initialize real-time 3D viewer.
@@ -401,7 +423,8 @@ class RealTime3DViewer:
             max_depth_threshold,
             depth_min_percentile,
             depth_max_percentile,
-            display_mode
+            display_mode,
+            use_raw_depth
         )
         self.frame_count = 0
 

@@ -49,7 +49,7 @@ uv run vda view3d image.jpg depth.png --depth-max-percentile 80
 
 **Real-Time Webcam:**
 ```bash
-# Default: 5-95% range (already applied!)
+# Default: 0-95% range (preserves close subjects!)
 uv run vda webcam3d
 
 # More aggressive for cluttered scenes
@@ -89,7 +89,7 @@ uv run vda webcam3d --subsample 2 --max-res 640
 
 ```bash
 # Balanced (default)
-uv run vda webcam3d --depth-min-percentile 5 --depth-max-percentile 95
+uv run vda webcam3d --depth-min-percentile 0 --depth-max-percentile 95
 
 # High quality
 uv run vda webcam3d --depth-min-percentile 10 --depth-max-percentile 90 --subsample 2
@@ -98,7 +98,7 @@ uv run vda webcam3d --depth-min-percentile 10 --depth-max-percentile 90 --subsam
 uv run vda webcam3d --subsample 4 --max-res 320
 ```
 
-**Why:** Close-range scenes have less depth variation, so moderate clamping works well.
+**Why:** Close-range scenes need 0% minimum to preserve close subjects (faces, hands), while 95% maximum reduces background clutter.
 
 ### Indoor Scenes
 
@@ -142,12 +142,13 @@ uv run vda screen3d-viewer --subsample 4 --depth-min-percentile 10 --depth-max-p
 
 | Parameter | Range | Default | Effect |
 |-----------|-------|---------|--------|
-| `--depth-min-percentile` | 0-100 | 0 (static)<br>5 (real-time) | Clamps near depth values<br>Higher = removes more foreground |
-| `--depth-max-percentile` | 0-100 | 100 (static)<br>95 (real-time) | Clamps far depth values<br>Lower = removes more background |
+| `--depth-min-percentile` | 0-100 | 0 (static/webcam)<br>5 (screen) | Clamps near depth values<br>Higher = removes more foreground |
+| `--depth-max-percentile` | 0-100 | 100 (static)<br>95 (webcam/screen) | Clamps far depth values<br>Lower = removes more background |
 
 **Common Presets:**
 - **No clamping:** `--depth-min-percentile 0 --depth-max-percentile 100`
-- **Light clamping (default):** `--depth-min-percentile 5 --depth-max-percentile 95`
+- **Webcam default:** `--depth-min-percentile 0 --depth-max-percentile 95`
+- **Screen default:** `--depth-min-percentile 5 --depth-max-percentile 95`
 - **Moderate clamping:** `--depth-min-percentile 10 --depth-max-percentile 90`
 - **Aggressive clamping:** `--depth-min-percentile 15 --depth-max-percentile 85`
 - **Foreground focus:** `--depth-min-percentile 0 --depth-max-percentile 70`
@@ -238,7 +239,7 @@ uv run vda webcam3d \
 uv run vda webcam3d \
   --subsample 3 \
   --max-res 480 \
-  --depth-min-percentile 5 \
+  --depth-min-percentile 0 \
   --depth-max-percentile 95 \
   --depth-scale 100
 ```

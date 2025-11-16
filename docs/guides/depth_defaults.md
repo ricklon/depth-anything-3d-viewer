@@ -6,27 +6,27 @@ Different commands have different default depth percentile settings optimized fo
 
 | Command | Min % | Max % | Reasoning |
 |---------|-------|-------|-----------|
-| `webcam3d` | **0%** | **90%** | Preserves close subjects (you!), removes far background |
+| `webcam3d` | **0%** | **95%** | Preserves close subjects (you!), reduces far background while preserving detail |
 | `screen3d-viewer` | **5%** | **95%** | Balanced for mid-range screen content |
 | `view3d` | **0%** | **100%** | No clamping, full control for static analysis |
 
 ## Why Different Defaults?
 
-### Webcam (0-90%)
+### Webcam (0-95%)
 
 **Problem:** Webcam typically shows **you** at close range (0.5-2 meters). Using 5-95% would cut off your face/body!
 
 **Solution:**
 - **0% minimum** = Keep ALL foreground (preserves closest parts like face, hands)
-- **90% maximum** = Remove far background (wall behind you, clutter)
+- **95% maximum** = Reduce far background (wall behind you, clutter) while preserving detail
 
 ```bash
 # Default webcam settings (optimized for portraits)
 uv run vda webcam3d
-# Uses: --depth-min-percentile 0 --depth-max-percentile 90
+# Uses: --depth-min-percentile 0 --depth-max-percentile 95
 ```
 
-**Result:** Your face and body are fully visible in 3D, background is simplified.
+**Result:** Your face and body are fully visible in 3D, background is reduced while preserving detail.
 
 ### Screen Capture (5-95%)
 
@@ -73,13 +73,13 @@ Clamped:    [----FACE(cut)-------BODY------------WALL(cut)----------]
 Result: Face is clipped/missing! ❌
 ```
 
-### Webcam with 0-90% (NEW - GOOD for close subjects)
+### Webcam with 0-95% (NEW - GOOD for close subjects)
 ```
 Depth map:  [||||FACE||||||||||||BODY||||||||||||WALL|||||||||||||||]
-Clamped:    [||||FACE||||||||||||BODY||||||||||||WALL(cut)----------]
-             ^^^^PRESERVED!                      ^^^^simplified
+Clamped:    [||||FACE||||||||||||BODY||||||||||||WALL--------------]
+             ^^^^PRESERVED!                      ^^^^reduced with detail
 
-Result: Face fully visible, background simplified! ✓
+Result: Face fully visible, background reduced while preserving detail! ✓
 ```
 
 ## When to Override Defaults
@@ -95,13 +95,13 @@ uv run vda webcam3d --depth-min-percentile 5 --depth-max-percentile 90
 **Very close to camera (< 0.5 meters):**
 ```bash
 # Keep even more background range
-uv run vda webcam3d --depth-min-percentile 0 --depth-max-percentile 95
+uv run vda webcam3d --depth-min-percentile 0 --depth-max-percentile 98
 ```
 
 **Clean background (minimal clutter):**
 ```bash
 # Don't clamp background much
-uv run vda webcam3d --depth-min-percentile 0 --depth-max-percentile 95
+uv run vda webcam3d --depth-min-percentile 0 --depth-max-percentile 98
 ```
 
 **Cluttered background (messy room):**
@@ -141,8 +141,8 @@ uv run vda webcam3d
 # Far from camera
 uv run vda webcam3d --depth-min-percentile 5
 
-# Very close to camera
-uv run vda webcam3d --depth-max-percentile 95
+# Very close to camera or clean background
+uv run vda webcam3d --depth-max-percentile 98
 
 # Clean up messy background
 uv run vda webcam3d --depth-max-percentile 80
@@ -183,7 +183,7 @@ uv run vda view3d image.jpg depth.png --depth-min-percentile 5 --depth-max-perce
 **For webcam portraits:**
 - You are typically at 0-20% of the depth range (very close)
 - Background is typically at 60-100% of the depth range (far)
-- **Clamping at 0-90%** keeps you, simplifies background
+- **Clamping at 0-95%** keeps you, reduces far background while preserving detail
 
 **For screen content:**
 - Content is typically spread across 10-90% of depth range
@@ -194,12 +194,12 @@ uv run vda view3d image.jpg depth.png --depth-min-percentile 5 --depth-max-perce
 
 ### "My face/body is cut off in webcam mode"
 
-This should now be fixed with the new defaults (0-90%)!
+This should now be fixed with the new defaults (0-95%)!
 
 If still cut off:
 ```bash
-# Increase max percentile
-uv run vda webcam3d --depth-max-percentile 95
+# Increase max percentile even more
+uv run vda webcam3d --depth-max-percentile 98
 ```
 
 ### "Too much noisy background in webcam mode"
@@ -228,7 +228,7 @@ uv run vda screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 85
 
 ## Summary
 
-- **Webcam (0-90%)**: Optimized for close-range portraits, preserves you fully visible
+- **Webcam (0-95%)**: Optimized for close-range portraits, preserves you fully visible while reducing background
 - **Screen (5-95%)**: Balanced for typical screen content
 - **Static (0-100%)**: Full control, you decide
 

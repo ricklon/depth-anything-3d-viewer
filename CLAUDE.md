@@ -209,7 +209,7 @@ from da3d.viewing import DepthMeshViewer, view_depth_3d, RealTime3DViewer
 ### Default Depth Range Settings
 
 Different commands have different default percentile ranges optimized for their use case:
-- `webcam3d`: 0-90% (preserves foreground, simplifies background)
+- `webcam3d`: 0-95% (preserves foreground, reduces background extremes while preserving detail)
 - `screen3d-viewer`: 5-95% (balanced for screen content)
 - `view3d`: 0-100% (full control, no auto-clamping)
 

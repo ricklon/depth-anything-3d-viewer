@@ -10,9 +10,15 @@ import os
 # Ensure parent Video-Depth-Anything is in path
 # This assumes Video-Depth-Anything is in the parent directory
 parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-video_depth_path = os.path.join(parent_dir, '..')
-if os.path.exists(os.path.join(video_depth_path, 'video_depth_anything')):
-    sys.path.insert(0, video_depth_path)
+github_dir = os.path.join(parent_dir, '..')
+
+# Check for Video-Depth-Anything in sibling directory
+video_depth_sibling = os.path.join(github_dir, 'Video-Depth-Anything')
+if os.path.exists(os.path.join(video_depth_sibling, 'video_depth_anything')):
+    sys.path.insert(0, video_depth_sibling)
+# Fallback: check if video_depth_anything is directly in parent (legacy)
+elif os.path.exists(os.path.join(github_dir, 'video_depth_anything')):
+    sys.path.insert(0, github_dir)
 
 # Import main from legacy CLI
 from da3d.cli.legacy import main as legacy_main
