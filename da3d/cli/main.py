@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 Main CLI entry point for Depth-Anything-3D viewer.
-Currently uses legacy CLI from original codebase.
 """
 
 import sys
@@ -16,12 +15,12 @@ github_dir = os.path.join(parent_dir, '..')
 video_depth_sibling = os.path.join(github_dir, 'Video-Depth-Anything')
 if os.path.exists(os.path.join(video_depth_sibling, 'video_depth_anything')):
     sys.path.insert(0, video_depth_sibling)
-# Fallback: check if video_depth_anything is directly in parent (legacy)
+# Fallback: check if video_depth_anything is directly in parent
 elif os.path.exists(os.path.join(github_dir, 'video_depth_anything')):
     sys.path.insert(0, github_dir)
 
-# Import main from legacy CLI
-from da3d.cli.legacy import main as legacy_main
+# Import main from commands CLI
+from da3d.cli.commands import main as commands_main
 
 
 def main():
@@ -33,7 +32,7 @@ def main():
         return
 
     try:
-        legacy_main()
+        commands_main()
     except ImportError as e:
         print("=" * 70)
         print("ERROR: Could not import Video-Depth-Anything dependencies")

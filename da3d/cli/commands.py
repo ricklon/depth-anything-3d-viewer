@@ -988,12 +988,26 @@ def view3d_command(args):
     print(f"Image: {args.image}")
     print(f"Depth: {args.depth}")
 
+    if args.metric:
+        print(f"Metric depth mode enabled")
+        print(f"  Focal length: fx={args.focal_length_x:.1f}, fy={args.focal_length_y:.1f}")
+        if args.principal_point_x is not None and args.principal_point_y is not None:
+            print(f"  Principal point: cx={args.principal_point_x:.1f}, cy={args.principal_point_y:.1f}")
+        else:
+            print(f"  Principal point: image center (auto)")
+
     viewer = DepthMeshViewer(
         depth_scale=args.depth_scale,
         max_depth_threshold=args.depth_threshold,
         depth_min_percentile=args.depth_min_percentile,
         depth_max_percentile=args.depth_max_percentile,
-        display_mode=args.display_mode
+        display_mode=args.display_mode,
+        use_metric_depth=args.metric,
+        focal_length_x=args.focal_length_x if args.metric else None,
+        focal_length_y=args.focal_length_y if args.metric else None,
+        principal_point_x=args.principal_point_x,
+        principal_point_y=args.principal_point_y,
+        metric_depth_scale=args.metric_depth_scale if hasattr(args, 'metric_depth_scale') else 1.0
     )
 
     viewer.process_and_view(
@@ -1106,10 +1120,18 @@ def webcam3d_command(args):
                     depth_max_percentile=args.depth_max_percentile,
                     background_color=tuple(float(x) for x in args.background.split(',')),
                     display_mode=args.display_mode,
-                    use_raw_depth=args.raw_depth
+                    use_raw_depth=args.raw_depth,
+                    use_metric_depth=args.metric,
+                    focal_length_x=args.focal_length_x if args.metric else None,
+                    focal_length_y=args.focal_length_y if args.metric else None,
+                    principal_point_x=args.principal_point_x if hasattr(args, 'principal_point_x') else None,
+                    principal_point_y=args.principal_point_y if hasattr(args, 'principal_point_y') else None,
+                    metric_depth_scale=args.metric_depth_scale if hasattr(args, 'metric_depth_scale') else 1.0
                 )
                 viewer_3d.initialize(width=1280, height=720)
                 print(f"Initialized 3D viewer: {w}x{h} ({args.display_mode} mode)")
+                if args.metric:
+                    print(f"Metric depth: fx={args.focal_length_x:.1f}, fy={args.focal_length_y:.1f}")
                 print(f"Depth range: {args.depth_min_percentile}%-{args.depth_max_percentile}% percentile")
 
             # Update 3D mesh
@@ -1221,10 +1243,18 @@ def screen3d_viewer_command(args):
                     depth_max_percentile=args.depth_max_percentile,
                     background_color=tuple(float(x) for x in args.background.split(',')),
                     display_mode=args.display_mode,
-                    use_raw_depth=args.raw_depth
+                    use_raw_depth=args.raw_depth,
+                    use_metric_depth=args.metric,
+                    focal_length_x=args.focal_length_x if args.metric else None,
+                    focal_length_y=args.focal_length_y if args.metric else None,
+                    principal_point_x=args.principal_point_x if hasattr(args, 'principal_point_x') else None,
+                    principal_point_y=args.principal_point_y if hasattr(args, 'principal_point_y') else None,
+                    metric_depth_scale=args.metric_depth_scale if hasattr(args, 'metric_depth_scale') else 1.0
                 )
                 viewer_3d.initialize(width=1280, height=720)
                 print(f"Initialized 3D viewer: {w}x{h} ({args.display_mode} mode)")
+                if args.metric:
+                    print(f"Metric depth: fx={args.focal_length_x:.1f}, fy={args.focal_length_y:.1f}")
                 print(f"Depth range: {args.depth_min_percentile}%-{args.depth_max_percentile}% percentile")
 
             # Update 3D mesh
@@ -1429,6 +1459,18 @@ Examples:
                               help='Start in wireframe mode (mesh mode only)')
     view3d_parser.add_argument('--background', type=str, default='0.1,0.1,0.1',
                               help='Background color as R,G,B (0-1 range, default: 0.1,0.1,0.1)')
+    view3d_parser.add_argument('--metric', action='store_true',
+                              help='Use metric depth mode (depth values in meters, requires --focal-length-x/y)')
+    view3d_parser.add_argument('--focal-length-x', type=float, default=470.4,
+                              help='Camera focal length X in pixels (default: 470.4, required for --metric)')
+    view3d_parser.add_argument('--focal-length-y', type=float, default=470.4,
+                              help='Camera focal length Y in pixels (default: 470.4, required for --metric)')
+    view3d_parser.add_argument('--principal-point-x', type=float, default=None,
+                              help='Principal point X in pixels (default: image center)')
+    view3d_parser.add_argument('--principal-point-y', type=float, default=None,
+                              help='Principal point Y in pixels (default: image center)')
+    view3d_parser.add_argument('--metric-depth-scale', type=float, default=0.01,
+                              help='Scale factor for metric depth values (default: 0.01, try 0.001-0.1 if depth range seems wrong)')
     view3d_parser.set_defaults(func=view3d_command)
 
     # Webcam3D command
@@ -1465,6 +1507,16 @@ Examples:
                                 help='Invert depth values')
     webcam3d_parser.add_argument('--background', type=str, default='0.1,0.1,0.1',
                                 help='Background color as R,G,B (0-1 range)')
+    webcam3d_parser.add_argument('--focal-length-x', type=float, default=470.4,
+                                help='Camera focal length X in pixels (default: 470.4, used with --metric)')
+    webcam3d_parser.add_argument('--focal-length-y', type=float, default=470.4,
+                                help='Camera focal length Y in pixels (default: 470.4, used with --metric)')
+    webcam3d_parser.add_argument('--principal-point-x', type=float, default=None,
+                                help='Principal point X in pixels (default: image center)')
+    webcam3d_parser.add_argument('--principal-point-y', type=float, default=None,
+                                help='Principal point Y in pixels (default: image center)')
+    webcam3d_parser.add_argument('--metric-depth-scale', type=float, default=0.01,
+                                help='Scale factor for metric depth values (default: 0.01, try 0.001-0.1 if depth range seems wrong)')
     webcam3d_parser.set_defaults(func=webcam3d_command)
 
     # Screen3D Viewer command
@@ -1504,6 +1556,16 @@ Examples:
                                        help='Invert depth values')
     screen3d_viewer_parser.add_argument('--background', type=str, default='0.1,0.1,0.1',
                                        help='Background color as R,G,B (0-1 range)')
+    screen3d_viewer_parser.add_argument('--focal-length-x', type=float, default=470.4,
+                                       help='Camera focal length X in pixels (default: 470.4, used with --metric)')
+    screen3d_viewer_parser.add_argument('--focal-length-y', type=float, default=470.4,
+                                       help='Camera focal length Y in pixels (default: 470.4, used with --metric)')
+    screen3d_viewer_parser.add_argument('--principal-point-x', type=float, default=None,
+                                       help='Principal point X in pixels (default: image center)')
+    screen3d_viewer_parser.add_argument('--principal-point-y', type=float, default=None,
+                                       help='Principal point Y in pixels (default: image center)')
+    screen3d_viewer_parser.add_argument('--metric-depth-scale', type=float, default=0.01,
+                                       help='Scale factor for metric depth values (default: 0.01, try 0.001-0.1 if depth range seems wrong)')
     screen3d_viewer_parser.set_defaults(func=screen3d_viewer_command)
 
     args = parser.parse_args()

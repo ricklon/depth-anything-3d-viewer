@@ -92,7 +92,7 @@ da3d/
 │   └── parallax.py   # DepthProjector, InteractiveParallaxController classes
 ├── cli/              # Command-line interface
 │   ├── main.py      # Entry point for `da3d` command
-│   ├── legacy.py    # Complete CLI implementation (to be modularized)
+│   ├── commands.py  # Complete CLI implementation (to be modularized)
 │   └── config.py    # Configuration utilities
 └── __init__.py      # Package exports
 ```
@@ -118,11 +118,14 @@ da3d/
 - Performance optimized with configurable subsampling and smoothing
 
 **Key Parameters:**
-- `depth_scale`: Z-displacement strength (0.1-2.0, where 1.0 = depth spans half image width)
+- `depth_scale`: Z-displacement strength (0.1-2.0, where 1.0 = depth spans half image width) - ignored when `use_metric_depth=True`
 - `depth_min_percentile` / `depth_max_percentile`: Clamp depth to percentile range
 - `subsample`: Mesh resolution (1=full, 2=half, 3=balanced, 4=fast)
 - `display_mode`: 'mesh' or 'pointcloud'
 - `smooth_mesh`: Apply Laplacian smoothing (slower but cleaner)
+- `use_metric_depth`: Use metric depth with camera intrinsics for accurate 3D reconstruction (NEW)
+- `focal_length_x` / `focal_length_y`: Camera focal lengths in pixels (required for metric depth)
+- `principal_point_x` / `principal_point_y`: Camera principal point (optional, defaults to image center)
 
 #### 2. 2.5D Parallax Effects (`da3d/projection/parallax.py`)
 
@@ -141,11 +144,11 @@ da3d/
 #### 3. CLI Architecture (`da3d/cli/`)
 
 **Current State:**
-- `main.py`: Entry point that loads legacy CLI
-- `legacy.py`: Complete CLI implementation (1000+ lines, all commands in one file)
+- `main.py`: Entry point that loads CLI commands
+- `commands.py`: Complete CLI implementation (1500+ lines, all commands in one file)
 - Imports Video-Depth-Anything from parent directory (expects it in PYTHONPATH)
 
-**Legacy CLI imports:**
+**CLI imports:**
 ```python
 # From Video-Depth-Anything (external dependency)
 from video_depth_anything.video_depth import VideoDepthAnything
@@ -157,7 +160,7 @@ from da3d.projection import DepthProjector, InteractiveParallaxController
 from da3d.viewing import DepthMeshViewer, view_depth_3d, RealTime3DViewer
 ```
 
-**Commands implemented in legacy.py:**
+**Commands implemented in commands.py:**
 - `webcam3d`: Real-time webcam 3D mesh viewing
 - `screen3d-viewer`: Screen capture 3D viewing
 - `view3d`: Static depth map 3D viewing
@@ -217,7 +220,7 @@ Different commands have different default percentile ranges optimized for their 
 
 ### Adding a New CLI Command
 
-Currently all commands are in `da3d/cli/legacy.py`. To add a new command:
+Currently all commands are in `da3d/cli/commands.py`. To add a new command:
 1. Add command function (e.g., `def my_command(args)`)
 2. Add argument parser in `create_parser()`
 3. Add command to dispatch in `main()`
@@ -311,7 +314,7 @@ User-facing documentation in `docs/`:
 ## Known Limitations
 
 1. **Video-Depth-Anything dependency**: Not pip-installable yet, requires manual setup
-2. **CLI modularization**: All commands in single `legacy.py` file (planned to be split)
+2. **CLI modularization**: All commands in single `commands.py` file (planned to be split)
 3. **GPU requirement**: CPU mode very slow for real-time viewing
 4. **Open3D blocking**: Real-time viewer uses polling, not truly async
 

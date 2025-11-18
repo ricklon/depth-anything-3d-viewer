@@ -37,18 +37,33 @@ class DepthMeshViewer:
         depth_min_percentile: float = 0.0,
         depth_max_percentile: float = 100.0,
         display_mode: str = 'mesh',
-        use_raw_depth: bool = False
+        use_raw_depth: bool = False,
+        use_metric_depth: bool = False,
+        focal_length_x: Optional[float] = None,
+        focal_length_y: Optional[float] = None,
+        principal_point_x: Optional[float] = None,
+        principal_point_y: Optional[float] = None,
+        metric_depth_scale: float = 1.0
     ):
         """
         Initialize the 3D mesh viewer.
 
         Args:
             depth_scale: Scale factor for Z-displacement (0.1-2.0, where 1.0 = depth spans half the image width)
+                        Ignored when use_metric_depth=True
             max_depth_threshold: Filter out pixels with depth > this percentile (removes background)
             depth_min_percentile: Clamp depth values below this percentile (0-100)
             depth_max_percentile: Clamp depth values above this percentile (0-100)
             display_mode: Display mode - 'mesh' for triangle mesh, 'pointcloud' for point cloud
             use_raw_depth: If True, use raw depth values without normalizing to 0-1 (preserves more detail)
+            use_metric_depth: If True, depth values are in meters and camera intrinsics are used
+                             for accurate 3D reconstruction (perspective projection)
+            focal_length_x: Camera focal length in X direction (pixels). Required if use_metric_depth=True
+            focal_length_y: Camera focal length in Y direction (pixels). Required if use_metric_depth=True
+            principal_point_x: Camera principal point X coordinate (pixels). If None, uses image center
+            principal_point_y: Camera principal point Y coordinate (pixels). If None, uses image center
+            metric_depth_scale: Scale factor to convert raw metric depth values to meters (default: 1.0)
+                               Adjust this if the depth range is too large/small for visualization
         """
         self.depth_scale = depth_scale
         self.max_depth_threshold = max_depth_threshold
@@ -56,6 +71,15 @@ class DepthMeshViewer:
         self.depth_max_percentile = depth_max_percentile
         self.display_mode = display_mode
         self.use_raw_depth = use_raw_depth
+        self.use_metric_depth = use_metric_depth
+        self.focal_length_x = focal_length_x
+        self.focal_length_y = focal_length_y
+        self.principal_point_x = principal_point_x
+        self.principal_point_y = principal_point_y
+        self.metric_depth_scale = metric_depth_scale
+
+        if use_metric_depth and (focal_length_x is None or focal_length_y is None):
+            raise ValueError("focal_length_x and focal_length_y are required when use_metric_depth=True")
 
     def create_mesh_from_depth(
         self,
@@ -89,63 +113,109 @@ class DepthMeshViewer:
 
         # Invert depth if requested
         if invert_depth:
-            depth = 1.0 - depth
-
-        # Normalize depth to reasonable Z range with percentile clamping
-        # This reduces extreme depth values for better visualization
-        depth_min = np.percentile(depth, self.depth_min_percentile)
-        depth_max = np.percentile(depth, self.depth_max_percentile)
-
-        # Clamp depth to the percentile range
-        depth_clamped = np.clip(depth, depth_min, depth_max)
-
-        # Optionally normalize to 0-1 range (or keep raw values for more detail)
-        if self.use_raw_depth:
-            # Use raw depth values - preserves full dynamic range
-            depth_normalized = depth_clamped - depth_min  # Shift to start from 0
-        else:
-            # Normalize to 0-1 range (traditional approach)
-            if depth_max - depth_min > 1e-8:
-                depth_normalized = (depth_clamped - depth_min) / (depth_max - depth_min)
+            if self.use_metric_depth:
+                # For metric depth: invert means reciprocal (disparity -> depth conversion)
+                # Add small epsilon to avoid division by zero
+                depth = 1.0 / (depth + 1e-6)
             else:
-                depth_normalized = np.zeros_like(depth_clamped)
+                # For relative depth: invert means flip the range
+                depth = 1.0 - depth
 
-        # Optional: Filter out far background (often noisy)
-        depth_threshold = np.percentile(depth, self.max_depth_threshold * 100)
-        mask = depth <= depth_threshold  # Fixed: include pixels equal to threshold
+        if self.use_metric_depth:
+            # Metric depth mode: Use raw depth values directly (they're already in meters)
+            # Just apply the scale factor and we're done
+            depth_normalized = depth * self.metric_depth_scale
+
+            # Debug output
+            print(f"[DEBUG] Image size: {w}x{h}, Focal length: {self.focal_length_x:.1f}px")
+            print(f"[DEBUG] Raw depth - min: {depth.min():.3f}m, max: {depth.max():.3f}m, mean: {depth.mean():.3f}m")
+            print(f"[DEBUG] After scale ({self.metric_depth_scale}x): min: {depth_normalized.min():.3f}m, max: {depth_normalized.max():.3f}m")
+
+            # Calculate field of view for reference
+            fov_degrees = 2 * np.arctan(w / (2 * self.focal_length_x)) * 180 / np.pi
+            print(f"[DEBUG] Horizontal FOV: {fov_degrees:.1f} degrees")
+
+            # For metric depth, we don't filter by percentile - we filter by absolute depth threshold
+            # Use max_depth_threshold as an actual depth value in meters
+            depth_threshold = self.max_depth_threshold if self.max_depth_threshold <= 10.0 else 10.0  # Cap at 10 meters
+            mask = depth_normalized <= depth_threshold
+        else:
+            # Relative depth mode: Apply percentile clamping and normalization
+            depth_min = np.percentile(depth, self.depth_min_percentile)
+            depth_max = np.percentile(depth, self.depth_max_percentile)
+
+            # Clamp depth to the percentile range
+            depth_clamped = np.clip(depth, depth_min, depth_max)
+
+            if self.use_raw_depth:
+                # Use raw depth values - preserves full dynamic range
+                depth_normalized = depth_clamped - depth_min  # Shift to start from 0
+            else:
+                # Normalize to 0-1 range (traditional approach)
+                if depth_max - depth_min > 1e-8:
+                    depth_normalized = (depth_clamped - depth_min) / (depth_max - depth_min)
+                else:
+                    depth_normalized = np.zeros_like(depth_clamped)
+
+            # Filter out far background using percentile
+            depth_threshold = np.percentile(depth, self.max_depth_threshold * 100)
+            mask = depth <= depth_threshold
 
         # Create coordinate grids
         x = np.arange(w)
         y = np.arange(h)
         x_grid, y_grid = np.meshgrid(x, y)
 
-        # Center the mesh and normalize by aspect ratio
-        # This ensures circular objects appear circular in 3D space
-        # Use the larger dimension as reference to maintain proper proportions
-        aspect_ratio = w / h
-        max_dim = max(w, h)
+        if self.use_metric_depth:
+            # Metric depth mode: Use perspective projection with camera intrinsics
+            # This creates accurate 3D geometry where depth values are in real-world units (meters)
 
-        if w >= h:
-            # Landscape or square: normalize X to [-max_dim/2, max_dim/2], scale Y by aspect ratio
-            x_centered = x_grid - w / 2
-            y_centered = (y_grid - h / 2) * aspect_ratio
+            # Use provided principal point or default to image center
+            cx = self.principal_point_x if self.principal_point_x is not None else w / 2.0
+            cy = self.principal_point_y if self.principal_point_y is not None else h / 2.0
+
+            # Perspective projection: X = (x - cx) * Z / fx, Y = (y - cy) * Z / fy
+            # Note: depth_normalized here is actually the raw metric depth in meters (after percentile clamping)
+            # We shift by depth_min but don't normalize to 0-1 to preserve metric scale
+            z = depth_normalized  # This is in meters
+            x_3d = (x_grid - cx) * z / self.focal_length_x
+            y_3d = (y_grid - cy) * z / self.focal_length_y
+
+            # Stack into (H*W, 3) array
+            points = np.stack([
+                x_3d.flatten(),
+                -y_3d.flatten(),  # Flip Y so image appears right-side up
+                z.flatten()
+            ], axis=1)
         else:
-            # Portrait: normalize Y, scale X
-            x_centered = (x_grid - w / 2) / aspect_ratio
-            y_centered = y_grid - h / 2
+            # Relative depth mode (original): Orthographic projection with arbitrary scale
+            # Center the mesh and normalize by aspect ratio
+            # This ensures circular objects appear circular in 3D space
+            # Use the larger dimension as reference to maintain proper proportions
+            aspect_ratio = w / h
+            max_dim = max(w, h)
 
-        # Create 3D points: (X, Y, Z) where Z comes from depth
-        # Scale Z proportionally to image dimensions so it matches X/Y coordinate space
-        # Use the larger dimension as reference for consistent scaling
-        z_scale_factor = max_dim * 0.5  # Z will span half the max dimension when depth_scale=1.0
-        z = depth_normalized * self.depth_scale * z_scale_factor
+            if w >= h:
+                # Landscape or square: normalize X to [-max_dim/2, max_dim/2], scale Y by aspect ratio
+                x_centered = x_grid - w / 2
+                y_centered = (y_grid - h / 2) * aspect_ratio
+            else:
+                # Portrait: normalize Y, scale X
+                x_centered = (x_grid - w / 2) / aspect_ratio
+                y_centered = y_grid - h / 2
 
-        # Stack into (H*W, 3) array
-        points = np.stack([
-            x_centered.flatten(),
-            -y_centered.flatten(),  # Flip Y so image appears right-side up
-            z.flatten()
-        ], axis=1)
+            # Create 3D points: (X, Y, Z) where Z comes from depth
+            # Scale Z proportionally to image dimensions so it matches X/Y coordinate space
+            # Use the larger dimension as reference for consistent scaling
+            z_scale_factor = max_dim * 0.5  # Z will span half the max dimension when depth_scale=1.0
+            z = depth_normalized * self.depth_scale * z_scale_factor
+
+            # Stack into (H*W, 3) array
+            points = np.stack([
+                x_centered.flatten(),
+                -y_centered.flatten(),  # Flip Y so image appears right-side up
+                z.flatten()
+            ], axis=1)
 
         # Get colors from image (normalize to 0-1)
         # Always use full RGB for mesh texture
@@ -392,13 +462,20 @@ class RealTime3DViewer:
         depth_max_percentile: float = 95.0,
         background_color: Tuple[float, float, float] = (0.1, 0.1, 0.1),
         display_mode: str = 'mesh',
-        use_raw_depth: bool = False
+        use_raw_depth: bool = False,
+        use_metric_depth: bool = False,
+        focal_length_x: Optional[float] = None,
+        focal_length_y: Optional[float] = None,
+        principal_point_x: Optional[float] = None,
+        principal_point_y: Optional[float] = None,
+        metric_depth_scale: float = 1.0
     ):
         """
         Initialize real-time 3D viewer.
 
         Args:
             depth_scale: Z-displacement scale (0.1-2.0, where 1.0 = depth spans half the image width)
+                        Ignored when use_metric_depth=True
             subsample: Downsample factor (higher = faster)
             smooth_mesh: Apply smoothing (slower but cleaner, mesh mode only)
             max_depth_threshold: Filter background pixels
@@ -406,6 +483,13 @@ class RealTime3DViewer:
             depth_max_percentile: Clamp far depth (reduces extremes)
             background_color: RGB background (0-1 range)
             display_mode: Display mode - 'mesh' or 'pointcloud'
+            use_raw_depth: Use raw depth values without normalization
+            use_metric_depth: Use metric depth with camera intrinsics
+            focal_length_x: Camera focal length X (pixels)
+            focal_length_y: Camera focal length Y (pixels)
+            principal_point_x: Principal point X (pixels)
+            principal_point_y: Principal point Y (pixels)
+            metric_depth_scale: Scale factor for metric depth values
         """
         self.depth_scale = depth_scale
         self.subsample = subsample
@@ -419,12 +503,18 @@ class RealTime3DViewer:
         self.vis = None
         self.geometry = None  # Can be mesh or point cloud
         self.mesh_viewer = DepthMeshViewer(
-            depth_scale,
-            max_depth_threshold,
-            depth_min_percentile,
-            depth_max_percentile,
-            display_mode,
-            use_raw_depth
+            depth_scale=depth_scale,
+            max_depth_threshold=max_depth_threshold,
+            depth_min_percentile=depth_min_percentile,
+            depth_max_percentile=depth_max_percentile,
+            display_mode=display_mode,
+            use_raw_depth=use_raw_depth,
+            use_metric_depth=use_metric_depth,
+            focal_length_x=focal_length_x,
+            focal_length_y=focal_length_y,
+            principal_point_x=principal_point_x,
+            principal_point_y=principal_point_y,
+            metric_depth_scale=metric_depth_scale
         )
         self.frame_count = 0
 
