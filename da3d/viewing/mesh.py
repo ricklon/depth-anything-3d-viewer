@@ -94,9 +94,9 @@ class DepthMeshViewer:
 
         Args:
             image: RGB image (H, W, 3), values 0-255
-            depth: Depth map (H, W), normalized 0-1 (0=near, 1=far)
+            depth: Depth map (H, W) - for Video-Depth-Anything, higher values = closer (inverse depth)
             subsample: Downsample factor (1=full res, 2=half res, etc.) for performance
-            invert_depth: If True, invert depth values (1=near, 0=far)
+            invert_depth: If True, invert depth values
             smooth_mesh: Apply Laplacian smoothing to reduce noise (mesh mode only)
 
         Returns:
@@ -111,56 +111,6 @@ class DepthMeshViewer:
 
         h, w = depth.shape
 
-        # Invert depth if requested
-        if invert_depth:
-            if self.use_metric_depth:
-                # For metric depth: invert means reciprocal (disparity -> depth conversion)
-                # Add small epsilon to avoid division by zero
-                depth = 1.0 / (depth + 1e-6)
-            else:
-                # For relative depth: invert means flip the range
-                depth = 1.0 - depth
-
-        if self.use_metric_depth:
-            # Metric depth mode: Use raw depth values directly (they're already in meters)
-            # Just apply the scale factor and we're done
-            depth_normalized = depth * self.metric_depth_scale
-
-            # Debug output
-            print(f"[DEBUG] Image size: {w}x{h}, Focal length: {self.focal_length_x:.1f}px")
-            print(f"[DEBUG] Raw depth - min: {depth.min():.3f}m, max: {depth.max():.3f}m, mean: {depth.mean():.3f}m")
-            print(f"[DEBUG] After scale ({self.metric_depth_scale}x): min: {depth_normalized.min():.3f}m, max: {depth_normalized.max():.3f}m")
-
-            # Calculate field of view for reference
-            fov_degrees = 2 * np.arctan(w / (2 * self.focal_length_x)) * 180 / np.pi
-            print(f"[DEBUG] Horizontal FOV: {fov_degrees:.1f} degrees")
-
-            # For metric depth, we don't filter by percentile - we filter by absolute depth threshold
-            # Use max_depth_threshold as an actual depth value in meters
-            depth_threshold = self.max_depth_threshold if self.max_depth_threshold <= 10.0 else 10.0  # Cap at 10 meters
-            mask = depth_normalized <= depth_threshold
-        else:
-            # Relative depth mode: Apply percentile clamping and normalization
-            depth_min = np.percentile(depth, self.depth_min_percentile)
-            depth_max = np.percentile(depth, self.depth_max_percentile)
-
-            # Clamp depth to the percentile range
-            depth_clamped = np.clip(depth, depth_min, depth_max)
-
-            if self.use_raw_depth:
-                # Use raw depth values - preserves full dynamic range
-                depth_normalized = depth_clamped - depth_min  # Shift to start from 0
-            else:
-                # Normalize to 0-1 range (traditional approach)
-                if depth_max - depth_min > 1e-8:
-                    depth_normalized = (depth_clamped - depth_min) / (depth_max - depth_min)
-                else:
-                    depth_normalized = np.zeros_like(depth_clamped)
-
-            # Filter out far background using percentile
-            depth_threshold = np.percentile(depth, self.max_depth_threshold * 100)
-            mask = depth <= depth_threshold
-
         # Create coordinate grids
         x = np.arange(w)
         y = np.arange(h)
@@ -168,57 +118,121 @@ class DepthMeshViewer:
 
         if self.use_metric_depth:
             # Metric depth mode: Use perspective projection with camera intrinsics
-            # This creates accurate 3D geometry where depth values are in real-world units (meters)
+            # Video-Depth-Anything outputs values where higher = closer (like disparity)
+            # For perspective projection we need actual distance where higher = farther
+
+            # Convert to actual depth (reciprocal)
+            # Add small epsilon to avoid division by zero
+            if not invert_depth:
+                # Default: model outputs inverse depth, convert to real depth
+                actual_depth = 1.0 / (depth + 1e-6)
+            else:
+                # User requested inversion, use values as-is
+                actual_depth = depth.copy()
+
+            # Apply scale factor
+            z = actual_depth * self.metric_depth_scale
+
+            # Debug output
+            print(f"[DEBUG] Image size: {w}x{h}, Focal length: {self.focal_length_x:.1f}px")
+            print(f"[DEBUG] Input depth (inverse) - min: {depth.min():.3f}, max: {depth.max():.3f}")
+            print(f"[DEBUG] Actual depth - min: {z.min():.3f}m, max: {z.max():.3f}m, mean: {z.mean():.3f}m")
+
+            # Calculate field of view for reference
+            fov_degrees = 2 * np.arctan(w / (2 * self.focal_length_x)) * 180 / np.pi
+            print(f"[DEBUG] Horizontal FOV: {fov_degrees:.1f} degrees")
 
             # Use provided principal point or default to image center
             cx = self.principal_point_x if self.principal_point_x is not None else w / 2.0
             cy = self.principal_point_y if self.principal_point_y is not None else h / 2.0
 
             # Perspective projection: X = (x - cx) * Z / fx, Y = (y - cy) * Z / fy
-            # Note: depth_normalized here is actually the raw metric depth in meters (after percentile clamping)
-            # We shift by depth_min but don't normalize to 0-1 to preserve metric scale
-            z = depth_normalized  # This is in meters
             x_3d = (x_grid - cx) * z / self.focal_length_x
             y_3d = (y_grid - cy) * z / self.focal_length_y
 
+            # Scale to match relative depth coordinate space for consistent viewing
+            # Relative depth uses pixel coordinates (~-320 to 320 for 640px image)
+            # Metric depth in meters is much smaller, so scale up
+            scale_to_pixels = max(w, h)
+            x_3d = x_3d * scale_to_pixels
+            y_3d = y_3d * scale_to_pixels
+            z_scaled = z * scale_to_pixels
+
             # Stack into (H*W, 3) array
+            # Match the relative depth coordinate convention
             points = np.stack([
                 x_3d.flatten(),
                 -y_3d.flatten(),  # Flip Y so image appears right-side up
-                z.flatten()
+                -z_scaled.flatten()  # Negative Z = into the screen
             ], axis=1)
+
+            # No thresholding - use all pixels
+            mask = np.ones(h * w, dtype=bool)
+
         else:
-            # Relative depth mode (original): Orthographic projection with arbitrary scale
-            # Center the mesh and normalize by aspect ratio
-            # This ensures circular objects appear circular in 3D space
-            # Use the larger dimension as reference to maintain proper proportions
+            # Relative depth mode: Orthographic projection
+            # Video-Depth-Anything outputs DISPARITY (inverse depth): higher value = closer to camera
+
+            # Apply percentile clamping to reduce outliers
+            depth_min = np.percentile(depth, self.depth_min_percentile)
+            depth_max = np.percentile(depth, self.depth_max_percentile)
+            depth_clamped = np.clip(depth, depth_min, depth_max)
+
+            if self.use_raw_depth:
+                # Use disparity values directly without 0-1 normalization
+                # This preserves the actual depth variation in the scene
+                # High disparity = close, low disparity = far
+                # We need: close = small Z, far = large Z
+                # So invert: Z = max - disparity
+                depth_processed = depth_max - depth_clamped
+                # Now: face (high disparity ~9) -> small Z (~0)
+                #      background (low disparity ~0) -> large Z (~9)
+
+                if invert_depth:
+                    depth_processed = depth_clamped - depth_min
+            else:
+                # Traditional approach: use disparity directly
+                # Normalize to 0-1 range
+                if depth_max - depth_min > 1e-8:
+                    depth_processed = (depth_clamped - depth_min) / (depth_max - depth_min)
+                else:
+                    depth_processed = np.zeros_like(depth_clamped)
+                # Now: face (high disparity) = 1.0, background (low disparity) = 0.0
+                # We need to invert: face should have small Z, background large Z
+                depth_processed = 1.0 - depth_processed
+
+                if invert_depth:
+                    depth_processed = 1.0 - depth_processed
+
+            # Center the mesh coordinates
             aspect_ratio = w / h
             max_dim = max(w, h)
 
             if w >= h:
-                # Landscape or square: normalize X to [-max_dim/2, max_dim/2], scale Y by aspect ratio
                 x_centered = x_grid - w / 2
                 y_centered = (y_grid - h / 2) * aspect_ratio
             else:
-                # Portrait: normalize Y, scale X
                 x_centered = (x_grid - w / 2) / aspect_ratio
                 y_centered = y_grid - h / 2
 
-            # Create 3D points: (X, Y, Z) where Z comes from depth
-            # Scale Z proportionally to image dimensions so it matches X/Y coordinate space
-            # Use the larger dimension as reference for consistent scaling
-            z_scale_factor = max_dim * 0.5  # Z will span half the max dimension when depth_scale=1.0
-            z = depth_normalized * self.depth_scale * z_scale_factor
+            # Scale Z to match X/Y coordinate space
+            z_scale_factor = max_dim * 0.5
+            z = depth_processed * self.depth_scale * z_scale_factor
 
             # Stack into (H*W, 3) array
+            # In Open3D: +Z points toward camera, so closer = larger Z
+            # depth_processed: small = close, large = far
+            # We need to invert: close should be large Z
             points = np.stack([
                 x_centered.flatten(),
                 -y_centered.flatten(),  # Flip Y so image appears right-side up
-                z.flatten()
+                -z.flatten()            # Negate: close (small depth) -> large Z (toward camera)
             ], axis=1)
 
+            # No thresholding - use all pixels
+            mask = np.ones(h * w, dtype=bool)
+
         # Get colors from image (normalize to 0-1)
-        # Always use full RGB for mesh texture
         if image.dtype == np.uint8:
             colors = image.astype(np.float32) / 255.0
         else:
@@ -233,15 +247,13 @@ class DepthMeshViewer:
         # Return point cloud if in pointcloud mode
         if self.display_mode == 'pointcloud':
             # Estimate normals for better lighting
-            # Use smaller radius to preserve depth detail (3.0 instead of 10.0)
-            # Radius is in the same coordinate space as points (pixels after subsampling)
             pcd.estimate_normals(
                 search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=3.0, max_nn=20)
             )
             return pcd
 
         # Create mesh using grid triangulation
-        mesh = self._create_grid_mesh(points, colors, w, h, mask.flatten())
+        mesh = self._create_grid_mesh(points, colors, w, h, mask)
 
         if smooth_mesh and mesh.has_vertices():
             # Apply Laplacian smoothing to reduce depth map noise
