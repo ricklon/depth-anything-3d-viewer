@@ -67,6 +67,9 @@ def plot_point_cloud(mesh, title, output_filename):
     # Invert Y axis (image coordinates Y is down, but 3D world Y is usually Up)
     # Our mesh generation already handles -y.
     
+    # Remove grid lines for cleaner visualization
+    ax.grid(False)
+    
     plt.tight_layout()
     plt.savefig(output_filename, dpi=150)
     plt.close(fig)

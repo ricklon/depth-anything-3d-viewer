@@ -61,8 +61,13 @@ def plot_mesh(mesh, title, output_filename):
     ax3.set_zlabel("Y")
     ax3.view_init(elev=0, azim=-90) # Look along Z?
     
+    # Remove grid lines for cleaner visualization
+    ax1.grid(False)
+    ax2.grid(False)
+    ax3.grid(False)
+    
     plt.tight_layout()
-    plt.savefig(output_filename)
+    plt.savefig(output_filename, dpi=150)  # Increase DPI for better quality
     plt.close(fig)
     print(f"Saved {output_filename}")
 
@@ -142,7 +147,7 @@ def main():
         mesh = viewer.create_mesh_from_depth(
             image, 
             depth, 
-            subsample=4, # Downsample for speed
+            subsample=2, # Reduced from 4 for better detail
             invert_depth=mode['invert_depth'],
             smooth_mesh=False
         )
