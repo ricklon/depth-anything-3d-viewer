@@ -24,42 +24,45 @@ def load_test_data(output_dir='./test_outputs'):
 def plot_mesh(mesh, title, output_filename):
     vertices = np.asarray(mesh.vertices)
     
-    # Downsample for plotting speed if needed
-    if len(vertices) > 10000:
-        indices = np.random.choice(len(vertices), 10000, replace=False)
+    # Downsample for plotting speed if needed (increased limit for better quality)
+    max_points = 50000  # Increased from 10000
+    if len(vertices) > max_points:
+        indices = np.random.choice(len(vertices), max_points, replace=False)
         vertices = vertices[indices]
         
     fig = plt.figure(figsize=(15, 5))
     fig.suptitle(title, fontsize=16)
     
-    # Top View (X-Z plane)
+    # Top View (X-Z plane) - Looking down from above
     ax1 = fig.add_subplot(131, projection='3d')
-    ax1.scatter(vertices[:, 0], vertices[:, 2], vertices[:, 1], s=1, c=vertices[:, 2], cmap='viridis')
+    ax1.scatter(vertices[:, 0], vertices[:, 2], vertices[:, 1], s=0.5, c=vertices[:, 2], cmap='viridis', alpha=0.8)
     ax1.set_title("Top View (X-Z)")
-    ax1.set_xlabel("X")
-    ax1.set_ylabel("Z")
-    ax1.set_zlabel("Y")
-    ax1.view_init(elev=90, azim=-90) # Look down Y axis? No, Z is depth. 
-    # Open3D: Y is Up/Down. Z is Depth. X is Left/Right.
-    # Top view usually means looking down Y.
+    ax1.set_xlabel("X (m)")
+    ax1.set_ylabel("Z (m)")
+    ax1.set_zlabel("Y (m)")
+    ax1.view_init(elev=90, azim=-90)
+    # Set equal aspect ratio for proper metric visualization
+    ax1.set_box_aspect([1, 1, 0.5])
     
-    # Side View (Y-Z plane)
+    # Side View (Y-Z plane) - Looking from the side
     ax2 = fig.add_subplot(132, projection='3d')
-    ax2.scatter(vertices[:, 0], vertices[:, 2], vertices[:, 1], s=1, c=vertices[:, 2], cmap='viridis')
+    ax2.scatter(vertices[:, 0], vertices[:, 2], vertices[:, 1], s=0.5, c=vertices[:, 2], cmap='viridis', alpha=0.8)
     ax2.set_title("Side View (Y-Z)")
-    ax2.set_xlabel("X")
-    ax2.set_ylabel("Z")
-    ax2.set_zlabel("Y")
-    ax2.view_init(elev=0, azim=0) # Look along X?
+    ax2.set_xlabel("X (m)")
+    ax2.set_ylabel("Z (m)")
+    ax2.set_zlabel("Y (m)")
+    ax2.view_init(elev=0, azim=0)
+    ax2.set_box_aspect([1, 1, 0.5])
     
-    # Front View (X-Y plane)
+    # Front View (X-Y plane) - Looking at the scene from camera position
     ax3 = fig.add_subplot(133, projection='3d')
-    ax3.scatter(vertices[:, 0], vertices[:, 2], vertices[:, 1], s=1, c=vertices[:, 2], cmap='viridis')
+    ax3.scatter(vertices[:, 0], vertices[:, 2], vertices[:, 1], s=0.5, c=vertices[:, 2], cmap='viridis', alpha=0.8)
     ax3.set_title("Front View (X-Y)")
-    ax3.set_xlabel("X")
-    ax3.set_ylabel("Z")
-    ax3.set_zlabel("Y")
-    ax3.view_init(elev=0, azim=-90) # Look along Z?
+    ax3.set_xlabel("X (m)")
+    ax3.set_ylabel("Z (m)")
+    ax3.set_zlabel("Y (m)")
+    ax3.view_init(elev=0, azim=-90)
+    ax3.set_box_aspect([1, 1, 0.5])
     
     # Remove grid lines for cleaner visualization
     ax1.grid(False)
@@ -147,7 +150,7 @@ def main():
         mesh = viewer.create_mesh_from_depth(
             image, 
             depth, 
-            subsample=2, # Reduced from 4 for better detail
+            subsample=1, # Full resolution for best quality
             invert_depth=mode['invert_depth'],
             smooth_mesh=False
         )

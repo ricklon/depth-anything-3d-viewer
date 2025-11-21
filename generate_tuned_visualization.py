@@ -26,23 +26,24 @@ def plot_point_cloud(mesh, title, output_filename):
     points = np.asarray(mesh.points)
     colors = np.asarray(mesh.colors)
     
-    # Downsample for plotting speed and clarity (too many points clutter the plot)
-    # For 640x480 = 300k points. Let's keep ~30k for the plot.
-    if len(points) > 30000:
-        indices = np.random.choice(len(points), 30000, replace=False)
+    # Downsample for plotting speed and clarity (increased limit for better quality)
+    # For 640x480 = 300k points. Increased to 100k for better detail.
+    max_points = 100000  # Increased from 30000
+    if len(points) > max_points:
+        indices = np.random.choice(len(points), max_points, replace=False)
         points = points[indices]
         colors = colors[indices]
         
     fig = plt.figure(figsize=(15, 10))
     fig.suptitle(title, fontsize=16)
     
-    # Isometric View
+    # Isometric View - optimized angle for scene visibility
     ax = fig.add_subplot(111, projection='3d')
     
-    # Scatter plot with actual RGB colors
-    ax.scatter(points[:, 0], points[:, 2], points[:, 1], s=1, c=colors)
+    # Scatter plot with actual RGB colors (smaller points for density)
+    ax.scatter(points[:, 0], points[:, 2], points[:, 1], s=0.3, c=colors, alpha=0.9)
     
-    ax.set_title("Metric Point Cloud (Best Quality)")
+    ax.set_title("Metric Point Cloud (High Quality)")
     ax.set_xlabel("X (meters)")
     ax.set_ylabel("Z (meters)")
     ax.set_zlabel("Y (meters)")
@@ -61,8 +62,8 @@ def plot_point_cloud(mesh, title, output_filename):
     ax.set_ylim(mid_z - max_range, mid_z + max_range) # Z is mapped to Y axis in plot for top-down feel? No, let's keep standard.
     ax.set_zlim(mid_y - max_range, mid_y + max_range)
     
-    # View angle: Elevated and slightly rotated
-    ax.view_init(elev=20, azim=-45)
+    # View angle: Elevated and rotated for better scene visibility
+    ax.view_init(elev=25, azim=-60)  # Adjusted for better perspective
     
     # Invert Y axis (image coordinates Y is down, but 3D world Y is usually Up)
     # Our mesh generation already handles -y.

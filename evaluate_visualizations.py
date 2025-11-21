@@ -72,9 +72,6 @@ def main():
         
         print(f"\nAgent Assessment:\n{result}\n")
         print("-" * 50 + "\n")
-        
-        # Add a small delay to avoid hitting rate limits (especially on free tiers)
-        time.sleep(5)
 
 if __name__ == "__main__":
     main()
