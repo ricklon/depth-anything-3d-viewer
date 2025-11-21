@@ -1,0 +1,18 @@
+
+--- Metric Projection Fix Verification ---
+[DEBUG] Image size: 3x3, Focal length: 100.0px
+[DEBUG] Input depth (inverse) - min: 2.000, max: 2.000
+[DEBUG] Actual depth - min: 2.000m, max: 2.000m, mean: 2.000m
+[DEBUG] Horizontal FOV: 1.7 degrees
+Right-middle vertex (2,1): [ 0.02 -0.   -2.  ]
+PASS: X coordinate correct (No rotation)
+PASS: Y coordinate correct
+PASS: Z coordinate correct (Metric scale)
+
+--- Metric Inverse Depth Test ---
+[DEBUG] Image size: 3x3, Focal length: 100.0px
+[DEBUG] Input depth (inverse) - min: 0.500, max: 0.500
+[DEBUG] Actual depth - min: 2.000m, max: 2.000m, mean: 2.000m
+[DEBUG] Horizontal FOV: 1.7 degrees
+Input 0.5 -> Z output: 1.9999959468841553
+PASS: Inverse depth calculation correct

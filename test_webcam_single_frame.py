@@ -247,7 +247,7 @@ def analyze_3d_mapping(depth, frame_rgb):
     print(f"    Y centered range: [{y_centered.min():.1f}, {y_centered.max():.1f}]")
 
 
-def test_3d_variations(frame_rgb, depth, output_dir='./test_outputs'):
+def test_3d_variations(frame_rgb, depth, output_dir='./test_outputs', no_interactive=False):
     """Test different 3D visualization variations and show them sequentially."""
     print(f"\n{'='*60}")
     print("STEP 4: Testing 3D visualization variations")
@@ -423,14 +423,17 @@ def test_3d_variations(frame_rgb, depth, output_dir='./test_outputs'):
                 print(f"    Point cloud created: {n_points} points")
 
             # Display
-            print(f"    Opening 3D viewer...")
-            viewer.view_mesh(
-                mesh,
-                window_name=f"Test {i+1}: {var['name']}",
-                width=1024,
-                height=768,
-                show_wireframe=False
-            )
+            if not no_interactive:
+                print(f"    Opening 3D viewer...")
+                viewer.view_mesh(
+                    mesh,
+                    window_name=f"Test {i+1}: {var['name']}",
+                    width=1024,
+                    height=768,
+                    show_wireframe=False
+                )
+            else:
+                print(f"    Skipping interactive viewer (headless mode)")
 
         except Exception as e:
             print(f"    [ERROR] {e}")
@@ -455,12 +458,19 @@ def main():
     print("\nClose each 3D viewer window to proceed to the next test.")
     print("="*60)
 
+    import argparse
+    parser = argparse.ArgumentParser(description="Single-frame webcam test")
+    parser.add_argument("--camera-id", type=int, default=0, help="Camera ID (default: 0)")
+    parser.add_argument("--output-dir", type=str, default="./test_outputs", help="Output directory")
+    parser.add_argument("--no-interactive", action="store_true", help="Skip interactive 3D viewer")
+    args = parser.parse_args()
+
     # Configuration
-    CAMERA_ID = 0
+    CAMERA_ID = args.camera_id
     MAX_RES = 640
     ENCODER = 'vits'
     CHECKPOINTS_DIR = './checkpoints'
-    OUTPUT_DIR = './test_outputs'
+    OUTPUT_DIR = args.output_dir
 
     # Step 1: Capture webcam frame
     frame_rgb = capture_webcam_frame(camera_id=CAMERA_ID, max_res=MAX_RES)
@@ -483,7 +493,7 @@ def main():
     analyze_3d_mapping(depth, frame_rgb)
 
     # Step 4: Test 3D variations
-    test_3d_variations(frame_rgb, depth, output_dir=OUTPUT_DIR)
+    test_3d_variations(frame_rgb, depth, output_dir=OUTPUT_DIR, no_interactive=args.no_interactive)
 
     print("\n" + "="*60)
     print(" TEST COMPLETE")
