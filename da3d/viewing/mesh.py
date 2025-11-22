@@ -410,7 +410,11 @@ class DepthMeshViewer:
 
         # Set up camera view
         view_control = vis.get_view_control()
-        view_control.set_zoom(0.8)
+        # Standard front view: looking down -Z axis, Y is up
+        view_control.set_front([0, 0, -1])
+        view_control.set_lookat([0, 0, 0])
+        view_control.set_up([0, 1, 0])
+        view_control.set_zoom(0.7)
 
         mode_str = "Mesh" if is_mesh else "Point Cloud"
         print(f"\n=== 3D Depth Viewer ({mode_str}) ===")
@@ -606,9 +610,15 @@ class RealTime3DViewer:
         else:
             render_option.point_size = 3.0
 
-        # Set initial view
+        # Set initial view to a standard front-facing position
         view_control = self.vis.get_view_control()
-        view_control.set_zoom(0.6)
+        
+        # Standard front view: looking down -Z axis, Y is up
+        # This ensures the scene is centered and upright
+        view_control.set_front([0, 0, -1])
+        view_control.set_lookat([0, 0, 0])
+        view_control.set_up([0, 1, 0])
+        view_control.set_zoom(0.7)  # 0.7 frames the scene well without being too far
 
         print(f"\n=== Real-Time 3D Viewer ===")
         print("Controls:")
