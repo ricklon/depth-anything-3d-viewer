@@ -180,28 +180,31 @@ class DepthMeshViewer:
             # This is more expensive but effectively removes "flying pixels"
             # We perform this on a temporary point cloud
             if np.sum(mask_valid) > 0:
-                pcd_temp = o3d.geometry.PointCloud()
-                pcd_temp.points = o3d.utility.Vector3dVector(points[mask_valid])
-                
-                # nb_neighbors: number of neighbors to analyze for each point
-                # std_ratio: threshold based on standard deviation of mean distance
-                # Lower std_ratio = more aggressive filtering
-                cl, ind = pcd_temp.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
-                
-                # 'ind' contains indices of inliers within the 'mask_valid' subset
-                # We need to map this back to the original full mask
-                
-                # Create a full-size boolean mask initialized to False
-                final_mask = np.zeros(len(points), dtype=bool)
-                
-                # Get indices of the valid points in the original array
-                valid_indices = np.where(mask_valid)[0]
-                
-                # Mark the statistically valid points as True
-                final_mask[valid_indices[ind]] = True
-                
-                mask_valid = final_mask
-                
+                try:
+                    pcd_temp = o3d.geometry.PointCloud()
+                    pcd_temp.points = o3d.utility.Vector3dVector(points[mask_valid])
+                    
+                    # nb_neighbors: number of neighbors to analyze for each point
+                    # std_ratio: threshold based on standard deviation of mean distance
+                    # Lower std_ratio = more aggressive filtering
+                    cl, ind = pcd_temp.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
+                    
+                    # 'ind' contains indices of inliers within the 'mask_valid' subset
+                    # We need to map this back to the original full mask
+                    
+                    # Create a full-size boolean mask initialized to False
+                    final_mask = np.zeros(len(points), dtype=bool)
+                    
+                    # Get indices of the valid points in the original array
+                    valid_indices = np.where(mask_valid)[0]
+                    
+                    # Mark the statistically valid points as True
+                    final_mask[valid_indices[ind]] = True
+                    
+                    mask_valid = final_mask
+                except Exception as e:
+                    print(f"[ERROR] SOR failed: {e}")
+            
             points = points[mask_valid]
             
             # No thresholding - use all pixels
