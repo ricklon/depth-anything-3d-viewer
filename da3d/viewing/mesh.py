@@ -245,15 +245,12 @@ class DepthMeshViewer:
                     depth_processed = 1.0 - depth_processed
 
             # Center the mesh coordinates
-            aspect_ratio = w / h
+            # Center the mesh coordinates
+            # We want to preserve the aspect ratio, so we don't scale x/y differently
+            x_centered = x_grid - w / 2
+            y_centered = y_grid - h / 2
+            
             max_dim = max(w, h)
-
-            if w >= h:
-                x_centered = x_grid - w / 2
-                y_centered = (y_grid - h / 2) * aspect_ratio
-            else:
-                x_centered = (x_grid - w / 2) / aspect_ratio
-                y_centered = y_grid - h / 2
 
             # Scale Z to match X/Y coordinate space
             z_scale_factor = max_dim * 0.5
