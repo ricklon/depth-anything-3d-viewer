@@ -1126,7 +1126,9 @@ def webcam3d_command(args):
                     focal_length_y=args.focal_length_y if args.metric else None,
                     principal_point_x=args.principal_point_x if hasattr(args, 'principal_point_x') else None,
                     principal_point_y=args.principal_point_y if hasattr(args, 'principal_point_y') else None,
-                    metric_depth_scale=args.metric_depth_scale if hasattr(args, 'metric_depth_scale') else 1.0
+                    metric_depth_scale=args.metric_depth_scale if hasattr(args, 'metric_depth_scale') else 1.0,
+                    sor_neighbors=args.sor_neighbors,
+                    sor_std_ratio=args.sor_std_ratio
                 )
                 viewer_3d.initialize(width=1280, height=720)
                 print(f"Initialized 3D viewer: {w}x{h} ({args.display_mode} mode)")
@@ -1519,6 +1521,10 @@ Examples:
                                 help='Principal point Y in pixels (default: image center)')
     webcam3d_parser.add_argument('--metric-depth-scale', type=float, default=0.01,
                                 help='Scale factor for metric depth values (default: 0.01, try 0.001-0.1 if depth range seems wrong)')
+    webcam3d_parser.add_argument('--sor-neighbors', type=int, default=50,
+                                help='Number of neighbors for Statistical Outlier Removal (default: 50)')
+    webcam3d_parser.add_argument('--sor-std-ratio', type=float, default=1.0,
+                                help='Standard deviation ratio for Statistical Outlier Removal (default: 1.0, lower = more aggressive)')
     webcam3d_parser.set_defaults(func=webcam3d_command)
 
     # Screen3D Viewer command
