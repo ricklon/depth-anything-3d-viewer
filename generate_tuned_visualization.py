@@ -41,12 +41,14 @@ def plot_point_cloud(mesh, title, output_filename):
     ax = fig.add_subplot(111, projection='3d')
     
     # Scatter plot with actual RGB colors (smaller points for density)
-    ax.scatter(points[:, 0], points[:, 2], points[:, 1], s=0.3, c=colors, alpha=0.9)
+    # New Coordinate System: X=Right, Y=Up, Z=Back (towards camera)
+    # Matplotlib convention: X, Y, Z
+    ax.scatter(points[:, 0], points[:, 1], points[:, 2], s=0.3, c=colors, alpha=0.9)
     
     ax.set_title("Metric Point Cloud (High Quality)")
     ax.set_xlabel("X (meters)")
-    ax.set_ylabel("Z (meters)")
-    ax.set_zlabel("Y (meters)")
+    ax.set_ylabel("Y (meters)")
+    ax.set_zlabel("Z (meters)")
     
     # Set equal aspect ratio for true metric visualization
     # Matplotlib 3D doesn't have 'equal' aspect ratio easily, but we can set limits
@@ -59,14 +61,13 @@ def plot_point_cloud(mesh, title, output_filename):
     mid_z = (points[:,2].max()+points[:,2].min()) * 0.5
     
     ax.set_xlim(mid_x - max_range, mid_x + max_range)
-    ax.set_ylim(mid_z - max_range, mid_z + max_range) # Z is mapped to Y axis in plot for top-down feel? No, let's keep standard.
-    ax.set_zlim(mid_y - max_range, mid_y + max_range)
+    ax.set_ylim(mid_y - max_range, mid_y + max_range)
+    ax.set_zlim(mid_z - max_range, mid_z + max_range)
     
-    # View angle: Elevated and rotated for better scene visibility
-    ax.view_init(elev=25, azim=-60)  # Adjusted for better perspective
-    
-    # Invert Y axis (image coordinates Y is down, but 3D world Y is usually Up)
-    # Our mesh generation already handles -y.
+    # View angle: 
+    # Elev=20 (slightly looking down)
+    # Azim=-45 (isometric-like from front-left)
+    ax.view_init(elev=20, azim=-45)
     
     # Remove grid lines for cleaner visualization
     ax.grid(False)

@@ -159,15 +159,53 @@ class DepthMeshViewer:
             z_scaled = z * scale_to_pixels
 
             # Stack into (H*W, 3) array
-            # Match the relative depth coordinate convention
+            # Open3D coordinate system: Right-handed, Y-up, -Z forward
+            # Our data: +Y is down (image coordinates), +Z is forward (depth)
+            # To align:
+            # - Invert Y to make +Y up
+            # - Invert Z to make -Z forward (standard camera view)
             points = np.stack([
                 x_3d.flatten(),
-                -y_3d.flatten(),  # Flip Y so image appears right-side up
-                -z_scaled.flatten()  # Negative Z = into the screen
+                -y_3d.flatten(),     # Flip Y so image appears right-side up (Y-up)
+                -z_scaled.flatten()  # Negative Z = into the screen (standard OpenGL/Open3D camera)
             ], axis=1)
 
+            # ---- Outlier removal (metric depth) ----
+            # 1. Percentile clipping to remove extreme depth values
+            z_vals = points[:, 2]
+            lower, upper = np.percentile(z_vals, [1, 99]) # Keep 1st-99th percentile
+            mask_valid = (z_vals >= lower) & (z_vals <= upper)
+            
+            # 2. Statistical Outlier Removal (SOR)
+            # This is more expensive but effectively removes "flying pixels"
+            # We perform this on a temporary point cloud
+            if np.sum(mask_valid) > 0:
+                pcd_temp = o3d.geometry.PointCloud()
+                pcd_temp.points = o3d.utility.Vector3dVector(points[mask_valid])
+                
+                # nb_neighbors: number of neighbors to analyze for each point
+                # std_ratio: threshold based on standard deviation of mean distance
+                # Lower std_ratio = more aggressive filtering
+                cl, ind = pcd_temp.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
+                
+                # 'ind' contains indices of inliers within the 'mask_valid' subset
+                # We need to map this back to the original full mask
+                
+                # Create a full-size boolean mask initialized to False
+                final_mask = np.zeros(len(points), dtype=bool)
+                
+                # Get indices of the valid points in the original array
+                valid_indices = np.where(mask_valid)[0]
+                
+                # Mark the statistically valid points as True
+                final_mask[valid_indices[ind]] = True
+                
+                mask_valid = final_mask
+                
+            points = points[mask_valid]
+            
             # No thresholding - use all pixels
-            mask = np.ones(h * w, dtype=bool)
+            mask = mask_valid
 
         else:
             # Relative depth mode: Orthographic projection
@@ -238,6 +276,10 @@ class DepthMeshViewer:
         else:
             colors = image
         colors = colors.reshape(-1, 3)
+        # Apply the same mask used for points (if defined) to keep colors aligned.
+        if 'mask_valid' in locals():
+            colors = colors[mask_valid]
+
 
         # Create Open3D point cloud
         pcd = o3d.geometry.PointCloud()
