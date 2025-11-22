@@ -316,6 +316,7 @@ class DepthMeshViewer:
     ) -> o3d.geometry.TriangleMesh:
         """
         Create a triangle mesh by connecting adjacent pixels in a grid pattern.
+        Optimized using vectorized numpy operations.
 
         Args:
             points: (N, 3) array of 3D vertices
@@ -331,25 +332,53 @@ class DepthMeshViewer:
         mesh.vertices = o3d.utility.Vector3dVector(points)
         mesh.vertex_colors = o3d.utility.Vector3dVector(colors)
 
-        # Create triangles by connecting grid neighbors
-        triangles = []
-        for y in range(height - 1):
-            for x in range(width - 1):
-                # Get indices of 2x2 quad
-                idx_tl = y * width + x           # top-left
-                idx_tr = y * width + (x + 1)     # top-right
-                idx_bl = (y + 1) * width + x     # bottom-left
-                idx_br = (y + 1) * width + (x + 1)  # bottom-right
-
-                # Only create triangles if all 4 vertices are valid
-                if mask[idx_tl] and mask[idx_tr] and mask[idx_bl] and mask[idx_br]:
-                    # Create two triangles per quad
-                    # Triangle 1: top-left, bottom-left, top-right
-                    triangles.append([idx_tl, idx_bl, idx_tr])
-                    # Triangle 2: top-right, bottom-left, bottom-right
-                    triangles.append([idx_tr, idx_bl, idx_br])
-
-        mesh.triangles = o3d.utility.Vector3iVector(np.array(triangles))
+        # Vectorized grid generation
+        # Create a grid of indices (H-1, W-1)
+        # We stop at H-1 and W-1 because we look at the pixel to the right/bottom
+        x_idxs = np.arange(width - 1)
+        y_idxs = np.arange(height - 1)
+        x_grid, y_grid = np.meshgrid(x_idxs, y_idxs)
+        
+        # Calculate indices for the top-left corner of each quad
+        # shape: (H-1, W-1)
+        tl_indices = y_grid * width + x_grid
+        
+        # Calculate indices for other corners relative to top-left
+        tr_indices = tl_indices + 1
+        bl_indices = tl_indices + width
+        br_indices = tl_indices + width + 1
+        
+        # Flatten indices to 1D arrays
+        tl = tl_indices.flatten()
+        tr = tr_indices.flatten()
+        bl = bl_indices.flatten()
+        br = br_indices.flatten()
+        
+        # Check validity of all 4 corners for each quad
+        # mask is (N,) boolean array
+        valid_quads = mask[tl] & mask[tr] & mask[bl] & mask[br]
+        
+        # Filter indices to keep only valid quads
+        tl = tl[valid_quads]
+        tr = tr[valid_quads]
+        bl = bl[valid_quads]
+        br = br[valid_quads]
+        
+        if len(tl) > 0:
+            # Create two triangles per valid quad
+            # Triangle 1: top-left, bottom-left, top-right
+            t1 = np.stack([tl, bl, tr], axis=1)
+            
+            # Triangle 2: top-right, bottom-left, bottom-right
+            t2 = np.stack([tr, bl, br], axis=1)
+            
+            # Combine all triangles
+            triangles = np.concatenate([t1, t2], axis=0)
+            
+            mesh.triangles = o3d.utility.Vector3iVector(triangles)
+        else:
+            # No valid triangles
+            mesh.triangles = o3d.utility.Vector3iVector(np.zeros((0, 3), dtype=np.int32))
 
         return mesh
 

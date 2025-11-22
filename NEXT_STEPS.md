@@ -15,8 +15,9 @@ The metric depth visualization is working but can be improved based on Vision Ag
     - Use a known object of known size to verify the real-world metric scale (meters) is accurate.
 
 ## 2. Performance Optimization
-- [ ] **Optimize Mesh Generation:**
+- [x] **Optimize Mesh Generation:**
     - The current numpy-based mesh generation can be slow at high resolutions (1280p+).
+    - [x] Replaced Python loops with vectorized NumPy operations in `_create_grid_mesh`.
     - Investigate moving vertex generation to GPU or using optimized Open3D functions.
 - [ ] **Resolve Dependencies:**
     - Fix the `xformers` / `triton` warnings to potentially unlock faster inference.
