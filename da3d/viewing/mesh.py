@@ -87,7 +87,8 @@ class DepthMeshViewer:
         depth: np.ndarray,
         subsample: int = 1,
         invert_depth: bool = False,
-        smooth_mesh: bool = True
+        smooth_mesh: bool = True,
+        use_sor: bool = True
     ):
         """
         Create a 3D geometry (mesh or point cloud) from an image and its depth map.
@@ -98,9 +99,7 @@ class DepthMeshViewer:
             subsample: Downsample factor (1=full res, 2=half res, etc.) for performance
             invert_depth: If True, invert depth values
             smooth_mesh: Apply Laplacian smoothing to reduce noise (mesh mode only)
-
-        Returns:
-            Open3D TriangleMesh or PointCloud object depending on display_mode
+            use_sor: Apply Statistical Outlier Removal (metric depth only)
         """
         # Subsample for performance
         if subsample > 1:
@@ -179,7 +178,7 @@ class DepthMeshViewer:
             # 2. Statistical Outlier Removal (SOR)
             # This is more expensive but effectively removes "flying pixels"
             # We perform this on a temporary point cloud
-            if np.sum(mask_valid) > 0:
+            if use_sor and np.sum(mask_valid) > 0:
                 try:
                     pcd_temp = o3d.geometry.PointCloud()
                     pcd_temp.points = o3d.utility.Vector3dVector(points[mask_valid])
@@ -525,7 +524,8 @@ class RealTime3DViewer:
         focal_length_y: Optional[float] = None,
         principal_point_x: Optional[float] = None,
         principal_point_y: Optional[float] = None,
-        metric_depth_scale: float = 1.0
+        metric_depth_scale: float = 1.0,
+        use_sor: bool = True
     ):
         """
         Initialize real-time 3D viewer.
@@ -547,6 +547,7 @@ class RealTime3DViewer:
             principal_point_x: Principal point X (pixels)
             principal_point_y: Principal point Y (pixels)
             metric_depth_scale: Scale factor for metric depth values
+            use_sor: Apply Statistical Outlier Removal (metric depth only)
         """
         self.depth_scale = depth_scale
         self.subsample = subsample
@@ -556,6 +557,7 @@ class RealTime3DViewer:
         self.depth_max_percentile = depth_max_percentile
         self.background_color = background_color
         self.display_mode = display_mode
+        self.use_sor = use_sor
 
         self.vis = None
         self.geometry = None  # Can be mesh or point cloud
@@ -625,7 +627,8 @@ class RealTime3DViewer:
             depth,
             subsample=self.subsample,
             invert_depth=invert_depth,
-            smooth_mesh=self.smooth_mesh
+            smooth_mesh=self.smooth_mesh,
+            use_sor=self.use_sor
         )
 
         # Update visualization
