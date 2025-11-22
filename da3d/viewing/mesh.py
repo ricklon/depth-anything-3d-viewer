@@ -509,12 +509,11 @@ class RealTime3DViewer:
     Real-time 3D mesh viewer that updates dynamically from video/webcam/screen.
     Uses non-blocking Open3D visualization for continuous mesh updates.
     """
-
     def __init__(
         self,
         depth_scale: float = 0.5,
         subsample: int = 2,
-        smooth_mesh: bool = False,  # Disable smoothing for speed
+        smooth_mesh: bool = False,
         max_depth_threshold: float = 0.95,
         depth_min_percentile: float = 0.0,
         depth_max_percentile: float = 95.0,
@@ -527,29 +526,32 @@ class RealTime3DViewer:
         principal_point_x: Optional[float] = None,
         principal_point_y: Optional[float] = None,
         metric_depth_scale: float = 1.0,
-        use_sor: bool = True
+        use_sor: bool = True,
+        sor_neighbors: int = 50,
+        sor_std_ratio: float = 1.0
     ):
         """
         Initialize real-time 3D viewer.
 
         Args:
-            depth_scale: Z-displacement scale (0.1-2.0, where 1.0 = depth spans half the image width)
-                        Ignored when use_metric_depth=True
-            subsample: Downsample factor (higher = faster)
-            smooth_mesh: Apply smoothing (slower but cleaner, mesh mode only)
-            max_depth_threshold: Filter background pixels
-            depth_min_percentile: Clamp near depth (reduces extremes)
-            depth_max_percentile: Clamp far depth (reduces extremes)
-            background_color: RGB background (0-1 range)
-            display_mode: Display mode - 'mesh' or 'pointcloud'
+            depth_scale: Scale factor for depth displacement
+            subsample: Downsample factor for mesh geometry
+            smooth_mesh: Enable Laplacian smoothing
+            max_depth_threshold: Threshold for filtering far points
+            depth_min_percentile: Clamp near depth percentile
+            depth_max_percentile: Clamp far depth percentile
+            background_color: Background color (R, G, B)
+            display_mode: 'mesh' or 'pointcloud'
             use_raw_depth: Use raw depth values without normalization
-            use_metric_depth: Use metric depth with camera intrinsics
+            use_metric_depth: Use metric depth projection
             focal_length_x: Camera focal length X (pixels)
             focal_length_y: Camera focal length Y (pixels)
             principal_point_x: Principal point X (pixels)
             principal_point_y: Principal point Y (pixels)
             metric_depth_scale: Scale factor for metric depth values
             use_sor: Apply Statistical Outlier Removal (metric depth only)
+            sor_neighbors: Number of neighbors for SOR
+            sor_std_ratio: Standard deviation ratio for SOR
         """
         self.depth_scale = depth_scale
         self.subsample = subsample
@@ -560,6 +562,8 @@ class RealTime3DViewer:
         self.background_color = background_color
         self.display_mode = display_mode
         self.use_sor = use_sor
+        self.sor_neighbors = sor_neighbors
+        self.sor_std_ratio = sor_std_ratio
 
         self.vis = None
         self.geometry = None  # Can be mesh or point cloud
@@ -636,7 +640,9 @@ class RealTime3DViewer:
             subsample=self.subsample,
             invert_depth=invert_depth,
             smooth_mesh=self.smooth_mesh,
-            use_sor=self.use_sor
+            use_sor=self.use_sor,
+            sor_neighbors=self.sor_neighbors,
+            sor_std_ratio=self.sor_std_ratio
         )
 
         # Update visualization
