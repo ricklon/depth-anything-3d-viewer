@@ -8,6 +8,7 @@ The metric depth visualization is working but can be improved based on Vision Ag
     - [x] Expose these parameters to the CLI (currently only in Python API).
 - [ ] **Address Sparsity:**
     - The Vision Agent noted the point cloud was "sparse".
+    - [x] Increased point size in visualization script.
     - Investigate mesh smoothing or surface reconstruction techniques (e.g., Poisson reconstruction) for metric depth.
     - Consider "hole filling" for invalid pixels in the depth map.
 - [ ] **Verify Scale Accuracy:**
