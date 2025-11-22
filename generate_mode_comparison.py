@@ -145,16 +145,21 @@ def main():
     ]
 
     for mode in modes:
-        print(f"Processing {mode['name']}...")
-        viewer = DepthMeshViewer(**mode['params'])
-        mesh = viewer.create_mesh_from_depth(
-            image, 
-            depth, 
-            subsample=1, # Full resolution for best quality
-            invert_depth=mode['invert_depth'],
-            smooth_mesh=False
-        )
-        plot_mesh(mesh, mode['name'], str(Path(args.output_dir) / mode['filename']))
+        try:
+            print(f"Processing {mode['name']}...")
+            viewer = DepthMeshViewer(**mode['params'])
+            mesh = viewer.create_mesh_from_depth(
+                image, 
+                depth, 
+                subsample=1, # Full resolution for best quality
+                invert_depth=mode['invert_depth'],
+                smooth_mesh=False
+            )
+            plot_mesh(mesh, mode['name'], str(Path(args.output_dir) / mode['filename']))
+        except Exception as e:
+            print(f"Error processing {mode['name']}: {e}")
+            import traceback
+            traceback.print_exc()
 
 if __name__ == "__main__":
     main()

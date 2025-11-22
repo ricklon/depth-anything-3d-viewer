@@ -87,8 +87,11 @@ class DepthMeshViewer:
         depth: np.ndarray,
         subsample: int = 1,
         invert_depth: bool = False,
+
         smooth_mesh: bool = True,
-        use_sor: bool = True
+        use_sor: bool = True,
+        sor_neighbors: int = 50,
+        sor_std_ratio: float = 1.0
     ):
         """
         Create a 3D geometry (mesh or point cloud) from an image and its depth map.
@@ -100,6 +103,8 @@ class DepthMeshViewer:
             invert_depth: If True, invert depth values
             smooth_mesh: Apply Laplacian smoothing to reduce noise (mesh mode only)
             use_sor: Apply Statistical Outlier Removal (metric depth only)
+            sor_neighbors: Number of neighbors for SOR (default: 50)
+            sor_std_ratio: Standard deviation ratio for SOR (default: 1.0, lower = more aggressive)
         """
         # Subsample for performance
         if subsample > 1:
@@ -186,7 +191,7 @@ class DepthMeshViewer:
                     # nb_neighbors: number of neighbors to analyze for each point
                     # std_ratio: threshold based on standard deviation of mean distance
                     # Lower std_ratio = more aggressive filtering
-                    cl, ind = pcd_temp.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
+                    cl, ind = pcd_temp.remove_statistical_outlier(nb_neighbors=sor_neighbors, std_ratio=sor_std_ratio)
                     
                     # 'ind' contains indices of inliers within the 'mask_valid' subset
                     # We need to map this back to the original full mask
@@ -204,7 +209,7 @@ class DepthMeshViewer:
                 except Exception as e:
                     print(f"[ERROR] SOR failed: {e}")
             
-            points = points[mask_valid]
+            # points = points[mask_valid]  <-- REMOVED: Keep full points for grid mesh generation
             
             # No thresholding - use all pixels
             mask = mask_valid
@@ -245,7 +250,6 @@ class DepthMeshViewer:
                     depth_processed = 1.0 - depth_processed
 
             # Center the mesh coordinates
-            # Center the mesh coordinates
             # We want to preserve the aspect ratio, so we don't scale x/y differently
             x_centered = x_grid - w / 2
             y_centered = y_grid - h / 2
@@ -275,18 +279,19 @@ class DepthMeshViewer:
         else:
             colors = image
         colors = colors.reshape(-1, 3)
-        # Apply the same mask used for points (if defined) to keep colors aligned.
-        if 'mask_valid' in locals():
-            colors = colors[mask_valid]
+        
+        # REMOVED: Do not filter colors here, as we need full arrays for grid mesh
+        # if 'mask_valid' in locals():
+        #     colors = colors[mask_valid]
 
-
-        # Create Open3D point cloud
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(points)
-        pcd.colors = o3d.utility.Vector3dVector(colors)
 
         # Return point cloud if in pointcloud mode
         if self.display_mode == 'pointcloud':
+            # Create Open3D point cloud with FILTERED points
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(points[mask])
+            pcd.colors = o3d.utility.Vector3dVector(colors[mask])
+            
             # Estimate normals for better lighting
             pcd.estimate_normals(
                 search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=3.0, max_nn=20)
@@ -294,7 +299,11 @@ class DepthMeshViewer:
             return pcd
 
         # Create mesh using grid triangulation
+        # We pass FULL points and colors, and the mask to skip invalid triangles
         mesh = self._create_grid_mesh(points, colors, w, h, mask)
+
+        # Remove vertices that are not part of any triangle (i.e. masked out points)
+        mesh.remove_unreferenced_vertices()
 
         if smooth_mesh and mesh.has_vertices():
             # Apply Laplacian smoothing to reduce depth map noise

@@ -28,7 +28,7 @@ def plot_point_cloud(mesh, title, output_filename):
     
     # Downsample for plotting speed and clarity (increased limit for better quality)
     # For 640x480 = 300k points. Increased to 100k for better detail.
-    max_points = 100000  # Increased from 30000
+    max_points = 300000  # Increased to full resolution
     if len(points) > max_points:
         indices = np.random.choice(len(points), max_points, replace=False)
         points = points[indices]
@@ -113,7 +113,10 @@ def main():
         depth, 
         subsample=1, # Full resolution for point cloud
         invert_depth=False,
-        smooth_mesh=False
+        smooth_mesh=False,
+        use_sor=True,
+        sor_neighbors=50,
+        sor_std_ratio=1.0
     )
     
     plot_point_cloud(pcd, "Tuned Metric Point Cloud (640x480)", str(Path(args.output_dir) / "tuned_visualization.png"))
