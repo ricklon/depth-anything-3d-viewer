@@ -19,8 +19,8 @@ The metric depth visualization is working but can be improved based on Vision Ag
     - The current numpy-based mesh generation can be slow at high resolutions (1280p+).
     - [x] Replaced Python loops with vectorized NumPy operations in `_create_grid_mesh`.
     - Investigate moving vertex generation to GPU or using optimized Open3D functions.
-- [ ] **Resolve Dependencies:**
-    - Fix the `xformers` / `triton` warnings to potentially unlock faster inference.
+- [x] **Resolve Dependencies:**
+    - [x] Suppressed `xformers` / `triton` warnings on Windows to clean up output.
     - Ensure `pyvirtualcam` and `mss` work seamlessly across all platforms.
 
 ## 3. User Experience & Features

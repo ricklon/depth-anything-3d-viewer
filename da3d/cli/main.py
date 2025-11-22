@@ -25,6 +25,11 @@ from da3d.cli.commands import main as commands_main
 
 def main():
     """Entry point for da3d CLI."""
+    import warnings
+    # Suppress xformers/torch warnings common on Windows
+    warnings.filterwarnings("ignore", message=".*1Torch was not compiled with flash attention.*")
+    warnings.filterwarnings("ignore", message=".*triton.*")
+    
     # Handle 'status' command before importing dependencies
     if len(sys.argv) > 1 and sys.argv[1] == 'status':
         from da3d.cli.status import show_status
