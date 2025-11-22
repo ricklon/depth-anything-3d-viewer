@@ -154,14 +154,6 @@ class DepthMeshViewer:
             x_3d = (x_grid - cx) * z / self.focal_length_x
             y_3d = (y_grid - cy) * z / self.focal_length_y
 
-            # Scale to match relative depth coordinate space for consistent viewing
-            # Relative depth uses pixel coordinates (~-320 to 320 for 640px image)
-            # Metric depth in meters is much smaller, so scale up
-            scale_to_pixels = max(w, h)
-            x_3d = x_3d * scale_to_pixels
-            y_3d = y_3d * scale_to_pixels
-            z_scaled = z * scale_to_pixels
-
             # Stack into (H*W, 3) array
             # Open3D coordinate system: Right-handed, Y-up, -Z forward
             # Our data: +Y is down (image coordinates), +Z is forward (depth)
@@ -171,7 +163,7 @@ class DepthMeshViewer:
             points = np.stack([
                 x_3d.flatten(),
                 -y_3d.flatten(),     # Flip Y so image appears right-side up (Y-up)
-                -z_scaled.flatten()  # Negative Z = into the screen (standard OpenGL/Open3D camera)
+                -z.flatten()         # Negative Z = into the screen (standard OpenGL/Open3D camera)
             ], axis=1)
 
             # ---- Outlier removal (metric depth) ----
