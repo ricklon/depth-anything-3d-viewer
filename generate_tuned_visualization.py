@@ -43,7 +43,7 @@ def plot_point_cloud(mesh, title, output_filename):
     # Scatter plot with actual RGB colors (smaller points for density)
     # New Coordinate System: X=Right, Y=Up, Z=Back (towards camera)
     # Matplotlib convention: X, Y, Z
-    ax.scatter(points[:, 0], points[:, 1], points[:, 2], s=0.3, c=colors, alpha=0.9)
+    ax.scatter(points[:, 0], points[:, 1], points[:, 2], s=1.5, c=colors, alpha=0.9)
     
     ax.set_title("Metric Point Cloud (High Quality)")
     ax.set_xlabel("X (meters)")
@@ -115,8 +115,8 @@ def main():
         invert_depth=False,
         smooth_mesh=False,
         use_sor=True,
-        sor_neighbors=50,
-        sor_std_ratio=1.0
+        sor_neighbors=100,
+        sor_std_ratio=0.5
     )
     
     plot_point_cloud(pcd, "Tuned Metric Point Cloud (640x480)", str(Path(args.output_dir) / "tuned_visualization.png"))
