@@ -24,12 +24,12 @@ The metric depth visualization is working but can be improved based on Vision Ag
     - Ensure `pyvirtualcam` and `mss` work seamlessly across all platforms.
 
 ## 3. User Experience & Features
-- [ ] **CLI Improvements:**
+- [x] **CLI Improvements:**
     - [x] Add CLI arguments for SOR parameters (`--sor-neighbors`, `--sor-ratio`).
-    - Add a preset flag for "High Quality" vs "Performance" modes (wrapping the resolution/subsample settings).
-- [ ] **Interactive Controls:**
-    - Add keyboard shortcuts to adjust SOR parameters in real-time.
-    - Add a "Reset Camera" button or key (now that we have a good default view).
+    - [x] Add a preset flag for "High Quality" vs "Performance" modes (wrapping the resolution/subsample settings).
+- [x] **Interactive Controls:**
+    - [x] Add keyboard shortcuts to adjust SOR parameters in real-time.
+    - [x] Add a "Reset Camera" button or key (now that we have a good default view).
 - [ ] **Recording:**
     - Improve recording capability to capture the 3D view directly (currently captures the window, which might have UI overlays).
 

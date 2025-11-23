@@ -650,8 +650,47 @@ class RealTime3DViewer:
         print("  Mouse drag: Rotate")
         print("  Mouse wheel: Zoom")
         print("  Shift + drag: Pan")
+        print("  [ / ]: Decrease/Increase SOR Neighbors")
+        print("  - / =: Decrease/Increase SOR Std Ratio")
+        print("  R: Reset View")
         print("  Q: Quit")
         print("=" * 28 + "\n")
+
+        # Register callbacks
+        self.vis.register_key_callback(ord('R'), self._reset_view)
+        self.vis.register_key_callback(ord('['), self._decrease_sor_neighbors)
+        self.vis.register_key_callback(ord(']'), self._increase_sor_neighbors)
+        self.vis.register_key_callback(ord('-'), self._decrease_sor_std)
+        self.vis.register_key_callback(ord('='), self._increase_sor_std)
+
+    def _reset_view(self, vis):
+        view_control = vis.get_view_control()
+        view_control.set_front([0, 0, -1])
+        view_control.set_lookat([0, 0, 0])
+        view_control.set_up([0, 1, 0])
+        view_control.set_zoom(0.7)
+        print("[INFO] View reset")
+        return False
+
+    def _decrease_sor_neighbors(self, vis):
+        self.sor_neighbors = max(10, self.sor_neighbors - 10)
+        print(f"[INFO] SOR Neighbors: {self.sor_neighbors}")
+        return False
+
+    def _increase_sor_neighbors(self, vis):
+        self.sor_neighbors += 10
+        print(f"[INFO] SOR Neighbors: {self.sor_neighbors}")
+        return False
+
+    def _decrease_sor_std(self, vis):
+        self.sor_std_ratio = max(0.1, self.sor_std_ratio - 0.1)
+        print(f"[INFO] SOR Std Ratio: {self.sor_std_ratio:.1f}")
+        return False
+
+    def _increase_sor_std(self, vis):
+        self.sor_std_ratio += 0.1
+        print(f"[INFO] SOR Std Ratio: {self.sor_std_ratio:.1f}")
+        return False
 
     def update_mesh(self, image: np.ndarray, depth: np.ndarray, invert_depth: bool = False):
         """
