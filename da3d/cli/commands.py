@@ -1552,8 +1552,8 @@ Examples:
                                 help='Principal point X in pixels (default: image center)')
     webcam3d_parser.add_argument('--principal-point-y', type=float, default=None,
                                 help='Principal point Y in pixels (default: image center)')
-    webcam3d_parser.add_argument('--metric-depth-scale', type=float, default=0.01,
-                                help='Scale factor for metric depth values (default: 0.01, try 0.001-0.1 if depth range seems wrong)')
+    webcam3d_parser.add_argument('--metric-depth-scale', type=float, default=0.005,
+                                help='Scale factor for metric depth values (default: 0.005, adjusted for typical webcam)')
     webcam3d_parser.add_argument('--sor-neighbors', type=int, default=50,
                                 help='Number of neighbors for Statistical Outlier Removal (default: 50)')
     webcam3d_parser.add_argument('--sor-std-ratio', type=float, default=1.0,
@@ -1607,8 +1607,8 @@ Examples:
                                        help='Principal point X in pixels (default: image center)')
     screen3d_viewer_parser.add_argument('--principal-point-y', type=float, default=None,
                                        help='Principal point Y in pixels (default: image center)')
-    screen3d_viewer_parser.add_argument('--metric-depth-scale', type=float, default=0.01,
-                                       help='Scale factor for metric depth values (default: 0.01, try 0.001-0.1 if depth range seems wrong)')
+    screen3d_viewer_parser.add_argument('--metric-depth-scale', type=float, default=0.005,
+                                       help='Scale factor for metric depth values (default: 0.005, adjusted for typical webcam)')
     screen3d_viewer_parser.add_argument('--sor-neighbors', type=int, default=50,
                                        help='Number of neighbors for Statistical Outlier Removal (default: 50)')
     screen3d_viewer_parser.add_argument('--sor-std-ratio', type=float, default=1.0,
