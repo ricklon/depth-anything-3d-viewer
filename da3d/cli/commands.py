@@ -1080,6 +1080,22 @@ def webcam3d_command(args):
     if args.camera_height > 0:
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.camera_height)
 
+    # Apply High Quality Preset if requested
+    if args.high_quality:
+        print("\n[INFO] High Quality Preset Enabled")
+        print("  - Resolution: 960p")
+        print("  - Subsample: 2")
+        print("  - Metric Depth: Enabled")
+        print("  - SOR: Neighbors=100, Std Ratio=0.5")
+        args.max_res = 960
+        args.subsample = 2
+        args.metric = True
+        args.sor_neighbors = 100
+        args.sor_std_ratio = 0.5
+        # Ensure focal lengths are set if not manually overridden
+        if args.focal_length_x == 470.4: # Default value
+             args.focal_length_x = 470.4 # Keep default or adjust if needed
+
     # Initialize 3D viewer
     viewer_3d = None
     frame_count = 0
@@ -1542,6 +1558,8 @@ Examples:
                                 help='Number of neighbors for Statistical Outlier Removal (default: 50)')
     webcam3d_parser.add_argument('--sor-std-ratio', type=float, default=1.0,
                                 help='Standard deviation ratio for Statistical Outlier Removal (default: 1.0, lower = more aggressive)')
+    webcam3d_parser.add_argument('--high-quality', action='store_true',
+                                help='Enable high-quality preset (960p, subsample=2, metric depth, optimized SOR)')
     webcam3d_parser.set_defaults(func=webcam3d_command)
 
     # Screen3D Viewer command
