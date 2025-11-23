@@ -13,8 +13,7 @@ The metric depth visualization is working but can be improved based on Vision Ag
     - Consider "hole filling" for invalid pixels in the depth map.
 - [x] **Verify Scale Accuracy:**
     - [x] Use a known object of known size to verify the real-world metric scale (meters) is accurate.
-    - **Result:** Consistently measured ~2cm for a 1cm object (Ratio: 0.5).
-    - **Action:** Updating default `metric_depth_scale` to 0.005 (from 0.01) to correct this 2x overestimation.
+    - **Result:** Calibrated `metric_depth_scale` to `0.005` based on measurements (1cm object measured as ~2cm with 0.01 scale).
 
 ## 2. Performance Optimization
 - [x] **Optimize Mesh Generation:**
