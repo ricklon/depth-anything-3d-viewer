@@ -620,7 +620,7 @@ class RealTime3DViewer:
             width: Window width
             height: Window height
         """
-        self.vis = o3d.visualization.Visualizer()
+        self.vis = o3d.visualization.VisualizerWithKeyCallback()
         self.vis.create_window(
             window_name='Real-Time 3D Depth Viewer',
             width=width,
