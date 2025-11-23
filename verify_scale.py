@@ -120,7 +120,7 @@ def main():
                 use_metric_depth=True,
                 focal_length_x=focal_length_x,
                 focal_length_y=focal_length_x, # Square pixels assumption
-                metric_depth_scale=1.0, # We want to verify raw output first
+                metric_depth_scale=1.0, # Revert to 1.0 for baseline
                 display_mode='pointcloud'
             )
 
