@@ -11,8 +11,10 @@ The metric depth visualization is working but can be improved based on Vision Ag
     - [x] Increased point size in visualization script.
     - Investigate mesh smoothing or surface reconstruction techniques (e.g., Poisson reconstruction) for metric depth.
     - Consider "hole filling" for invalid pixels in the depth map.
-- [ ] **Verify Scale Accuracy:**
-    - Use a known object of known size to verify the real-world metric scale (meters) is accurate.
+- [x] **Verify Scale Accuracy:**
+    - [x] Use a known object of known size to verify the real-world metric scale (meters) is accurate.
+    - **Result:** Measured 3.3cm for a 2.54cm object (Ratio: ~0.77).
+    - **Action:** Adjust `metric_depth_scale` or focal length to correct this.
 
 ## 2. Performance Optimization
 - [x] **Optimize Mesh Generation:**
