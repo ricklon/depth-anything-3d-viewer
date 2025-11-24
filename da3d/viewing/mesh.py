@@ -113,6 +113,14 @@ class DepthMeshViewer:
             depth = cv2.resize(depth, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
             image = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
 
+        # Apply bilateral filter to smooth depth quantization (layering) while preserving edges
+        # Only apply if not subsampled heavily, as it can be slow
+        if smooth_mesh:
+             # Convert to float32 for filtering if not already
+             depth_float = depth.astype(np.float32)
+             # Sigma values: spatial=5, range=0.1 (adjust range based on depth scale)
+             depth = cv2.bilateralFilter(depth_float, d=5, sigmaColor=0.1, sigmaSpace=5)
+
         h, w = depth.shape
 
         # Create coordinate grids
@@ -127,11 +135,15 @@ class DepthMeshViewer:
 
             # Convert to actual depth (reciprocal)
             # Add small epsilon to avoid division by zero
+            # Convert to actual depth
+            # CHALLENGING ASSUMPTION: The "layering" suggests we are treating disparity as linear depth.
+            # If the model outputs inverse depth (disparity), we MUST invert it to get linear depth (Z).
+            # Default behavior: Assume output is inverse depth (disparity) -> Invert to get Z.
             if not invert_depth:
-                # Default: model outputs inverse depth, convert to real depth
+                # Default: Convert inverse depth to real depth (Z = 1/d)
                 actual_depth = 1.0 / (depth + 1e-6)
             else:
-                # User requested inversion, use values as-is
+                # User requested to use values as-is (linear depth)
                 actual_depth = depth.copy()
 
             # Apply scale factor

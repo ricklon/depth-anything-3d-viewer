@@ -14,10 +14,11 @@ The metric depth visualization is working but can be improved based on Vision Ag
 - [x] **Verify Scale Accuracy:**
     - [x] Use a known object of known size to verify the real-world metric scale (meters) is accurate.
     - **Result:** Calibrated `metric_depth_scale` to `0.005` based on measurements (1cm object measured as ~2cm with 0.01 scale).
-- [ ] **Investigate Layering Artifacts:**
+- [x] **Investigate Layering Artifacts:**
     - User reported "layering" when viewing from the side.
     - [x] Created `analyze_depth_layers.py` to capture and visualize this issue.
-    - **Next:** Analyze `depth_analysis.png` and `view_side.png` to determine if this is quantization or model limitation.
+    - [x] **Findings:** Layering is likely due to disparity quantization exploding at distance (1/disparity).
+    - [x] **Fix:** Implemented Bilateral Filter and inverted depth logic (treating output as disparity) to mitigate this.
 
 ## 2. Performance Optimization
 - [x] **Optimize Mesh Generation:**

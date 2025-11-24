@@ -1552,8 +1552,8 @@ Examples:
                                 help='Principal point X in pixels (default: image center)')
     webcam3d_parser.add_argument('--principal-point-y', type=float, default=None,
                                 help='Principal point Y in pixels (default: image center)')
-    webcam3d_parser.add_argument('--metric-depth-scale', type=float, default=0.005,
-                                help='Scale factor for metric depth values (default: 0.005, adjusted for typical webcam)')
+    webcam3d_parser.add_argument('--metric-depth-scale', type=float, default=1.0,
+                                help='Scale factor for metric depth values (default: 1.0, assumes 1/depth output)')
     webcam3d_parser.add_argument('--sor-neighbors', type=int, default=50,
                                 help='Number of neighbors for Statistical Outlier Removal (default: 50)')
     webcam3d_parser.add_argument('--sor-std-ratio', type=float, default=1.0,
