@@ -1,0 +1,317 @@
+Test Run for Camera 0: Logi Cam C920e
+Date: 2025-11-21 16:54:51
+
+
+============================================================
+Running: uv run test_webcam_single_frame.py --camera-id 0 --output-dir test_outputs_multicam\camera_0_logi_cam_c920e --no-interactive
+============================================================
+C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\xformers\ops\fmha\flash.py:211: FutureWarning: `torch.library.impl_abstract` was renamed to `torch.library.register_fake`. Please use that instead; we will remove `torch.library.impl_abstract` in a future version of PyTorch.
+  @torch.library.impl_abstract("xformers_flash::flash_fwd")
+C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\xformers\ops\fmha\flash.py:344: FutureWarning: `torch.library.impl_abstract` was renamed to `torch.library.register_fake`. Please use that instead; we will remove `torch.library.impl_abstract` in a future version of PyTorch.
+  @torch.library.impl_abstract("xformers_flash::flash_bwd")
+A matching Triton is not available, some optimizations will not be enabled
+Traceback (most recent call last):
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\xformers\__init__.py", line 57, in _is_triton_available
+    import triton  # noqa
+    ^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'triton'
+C:\Users\rickr\GitHub\depth-anything-3d-viewer\test_webcam_single_frame.py:137: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model.load_state_dict(torch.load(str(checkpoint_path), map_location='cpu'), strict=True)
+C:\Users\rickr\GitHub\depth-anything-3d-viewer\test_webcam_single_frame.py:381: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
+  colormap = cm.get_cmap("inferno")
+
+============================================================
+ SINGLE FRAME WEBCAM 3D MAPPING TEST
+============================================================
+
+This test will:
+  1. Capture one frame from webcam
+  2. Generate depth map (relative depth)
+  3. Analyze the depth-to-3D coordinate mapping
+  4. Test different 3D visualization variations
+
+Close each 3D viewer window to proceed to the next test.
+============================================================
+
+============================================================
+STEP 1: Capturing webcam frame
+============================================================
+  Trying DirectShow backend...
+  [OK] Successfully opened camera using DirectShow
+  Waiting for camera to adjust...
+  Size: 640x480
+  [OK] Captured frame: (480, 640, 3)
+
+============================================================
+STEP 2: Generating relative depth map
+============================================================
+  Device: cuda
+  Loading model: checkpoints\video_depth_anything_vits.pth
+  Inferring depth...
+  [OK] Depth generated: (480, 640)
+       Range: [0.7359, 15.9158]
+       Mean: 4.8203, Std: 3.4607
+       Percentiles: 0%=0.736 5%=1.990 25%=2.687 50%=3.372 75%=4.926 95%=13.066 100%=15.916 
+
+============================================================
+STEP 3: Analyzing depth-to-3D mapping
+============================================================
+  Image size: 640x480
+
+  Depth statistics:
+    Min: 0.735888
+    Max: 15.915802
+    Range: 15.179914
+
+  After normalization (0-1):
+    Min: 0.000000
+    Max: 1.000000
+
+  3D Z-coordinate analysis at different depth_scale values:
+    scale=0.1: Z range = [0.0, 32.0] pixels
+    scale=0.3: Z range = [0.0, 96.0] pixels
+    scale=0.5: Z range = [0.0, 160.0] pixels
+    scale=0.8: Z range = [0.0, 256.0] pixels
+    scale=1.0: Z range = [0.0, 320.0] pixels
+
+  Metric depth perspective projection test:
+    Focal length: 470.4
+    Principal point: (320.0, 240.0)
+    X range: [-10.793, 2.923] meters
+    Y range: [-3.068, 7.796] meters
+    Z range: [0.736, 15.916] meters
+
+  Aspect ratio analysis:
+    Aspect ratio: 1.333
+    X centered range: [-320.0, 319.0]
+    Y centered range: [-320.0, 318.7]
+
+============================================================
+STEP 4: Testing 3D visualization variations
+============================================================
+
+  Will test 10 variations
+  Close each 3D viewer window to proceed to the next variation
+  Press 'q' or ESC in the 3D viewer to close it
+
+  Saved test files to test_outputs_multicam\camera_0_logi_cam_c920e/
+    - captured_frame.png
+    - depth_colormap.png
+    - depth_raw.npy
+
+  Testing variation 1. Relative depth (default settings)...
+    depth_scale: 0.5
+    depth_min_percentile: 0.0
+    depth_max_percentile: 100.0
+    display_mode: mesh
+    use_metric_depth: False
+    Mesh created: 76800 vertices, 152482 triangles
+    Skipping interactive viewer (headless mode)
+
+  Testing variation 2. Relative depth (webcam defaults: 0-95%)...
+    depth_scale: 0.5
+    depth_min_percentile: 0.0
+    depth_max_percentile: 95.0
+    display_mode: mesh
+    use_metric_depth: False
+    Mesh created: 76800 vertices, 152482 triangles
+    Skipping interactive viewer (headless mode)
+
+  Testing variation 3. Relative depth (RAW - proportional)...
+    depth_scale: 0.05
+    depth_min_percentile: 0.0
+    depth_max_percentile: 95.0
+    display_mode: mesh
+    use_metric_depth: False
+    use_raw_depth: True
+    Mesh created: 76800 vertices, 152482 triangles
+    Skipping interactive viewer (headless mode)
+
+  Testing variation 4. Relative depth (RAW - stronger scale)...
+    depth_scale: 0.1
+    depth_min_percentile: 0.0
+    depth_max_percentile: 95.0
+    display_mode: mesh
+    use_metric_depth: False
+    use_raw_depth: True
+    Mesh created: 76800 vertices, 152482 triangles
+    Skipping interactive viewer (headless mode)
+
+  Testing variation 5. Relative depth (normalized - for comparison)...
+    depth_scale: 0.5
+    depth_min_percentile: 0.0
+    depth_max_percentile: 95.0
+    display_mode: mesh
+    use_metric_depth: False
+    use_raw_depth: False
+    Mesh created: 76800 vertices, 152482 triangles
+    Skipping interactive viewer (headless mode)
+
+  Testing variation 6. Metric depth (default scale)...
+    depth_scale: 0.5
+    display_mode: mesh
+    use_metric_depth: True
+    focal_length_x: 470.4
+    focal_length_y: 470.4
+    metric_depth_scale: 1.0
+[DEBUG] Image size: 320x240, Focal length: 470.4px
+[DEBUG] Input depth (inverse) - min: 0.745, max: 15.838
+[DEBUG] Actual depth - min: 0.063m, max: 1.343m, mean: 0.293m
+[DEBUG] Horizontal FOV: 37.6 degrees
+    Mesh created: 76800 vertices, 152482 triangles
+    Skipping interactive viewer (headless mode)
+
+  Testing variation 7. Metric depth (scaled 0.1x)...
+    depth_scale: 0.5
+    display_mode: mesh
+    use_metric_depth: True
+    focal_length_x: 470.4
+    focal_length_y: 470.4
+    metric_depth_scale: 0.1
+[DEBUG] Image size: 320x240, Focal length: 470.4px
+[DEBUG] Input depth (inverse) - min: 0.745, max: 15.838
+[DEBUG] Actual depth - min: 0.006m, max: 0.134m, mean: 0.029m
+[DEBUG] Horizontal FOV: 37.6 degrees
+    Mesh created: 76800 vertices, 152482 triangles
+    Skipping interactive viewer (headless mode)
+
+  Testing variation 8. Metric depth (scaled 0.01x)...
+    depth_scale: 0.5
+    display_mode: mesh
+    use_metric_depth: True
+    focal_length_x: 470.4
+    focal_length_y: 470.4
+    metric_depth_scale: 0.01
+[DEBUG] Image size: 320x240, Focal length: 470.4px
+[DEBUG] Input depth (inverse) - min: 0.745, max: 15.838
+[DEBUG] Actual depth - min: 0.001m, max: 0.013m, mean: 0.003m
+[DEBUG] Horizontal FOV: 37.6 degrees
+    Mesh created: 76800 vertices, 152482 triangles
+    Skipping interactive viewer (headless mode)
+
+  Testing variation 9. Metric depth (point cloud)...
+    depth_scale: 0.5
+    display_mode: pointcloud
+    use_metric_depth: True
+    focal_length_x: 470.4
+    focal_length_y: 470.4
+    metric_depth_scale: 0.1
+[DEBUG] Image size: 320x240, Focal length: 470.4px
+[DEBUG] Input depth (inverse) - min: 0.745, max: 15.838
+[DEBUG] Actual depth - min: 0.006m, max: 0.134m, mean: 0.029m
+[DEBUG] Horizontal FOV: 37.6 degrees
+    Point cloud created: 76800 points
+    Skipping interactive viewer (headless mode)
+
+  Testing variation 10. Inverted depth (near becomes far)...
+    depth_scale: 0.5
+    depth_min_percentile: 0.0
+    depth_max_percentile: 95.0
+    display_mode: mesh
+    use_metric_depth: False
+    Mesh created: 76800 vertices, 152482 triangles
+    Skipping interactive viewer (headless mode)
+
+============================================================
+Testing complete!
+============================================================
+
+============================================================
+ TEST COMPLETE
+============================================================
+
+Test files saved to: test_outputs_multicam\camera_0_logi_cam_c920e/
+You can re-view any variation using:
+  da3d view3d test_outputs_multicam\camera_0_logi_cam_c920e/captured_frame.png test_outputs_multicam\camera_0_logi_cam_c920e/depth_raw.npy [options]
+
+============================================================
+Running: uv run generate_mode_comparison.py --input-dir test_outputs_multicam\camera_0_logi_cam_c920e --output-dir test_outputs_multicam\camera_0_logi_cam_c920e
+============================================================
+Loading test data from test_outputs_multicam\camera_0_logi_cam_c920e...
+Processing Metric Mode (Default)...
+[DEBUG] Image size: 160x120, Focal length: 470.4px
+[DEBUG] Input depth (inverse) - min: 0.739, max: 15.870
+[DEBUG] Actual depth - min: 0.063m, max: 1.353m, mean: 0.293m
+[DEBUG] Horizontal FOV: 19.3 degrees
+Saved test_outputs_multicam\camera_0_logi_cam_c920e\comparison_metric.png
+Processing Relative Mode (Default)...
+Saved test_outputs_multicam\camera_0_logi_cam_c920e\comparison_relative.png
+Processing Metric Mode (High FOV / Low Focal Length)...
+[DEBUG] Image size: 160x120, Focal length: 200.0px
+[DEBUG] Input depth (inverse) - min: 0.739, max: 15.870
+[DEBUG] Actual depth - min: 0.063m, max: 1.353m, mean: 0.293m
+[DEBUG] Horizontal FOV: 43.6 degrees
+Saved test_outputs_multicam\camera_0_logi_cam_c920e\comparison_metric_high_fov.png
+Processing Metric Mode (Low FOV / High Focal Length)...
+[DEBUG] Image size: 160x120, Focal length: 1000.0px
+[DEBUG] Input depth (inverse) - min: 0.739, max: 15.870
+[DEBUG] Actual depth - min: 0.063m, max: 1.353m, mean: 0.293m
+[DEBUG] Horizontal FOV: 9.1 degrees
+Saved test_outputs_multicam\camera_0_logi_cam_c920e\comparison_metric_low_fov.png
+Processing Metric Mode (Inverted - Incorrect)...
+[DEBUG] Image size: 160x120, Focal length: 470.4px
+[DEBUG] Input depth (inverse) - min: 0.739, max: 15.870
+[DEBUG] Actual depth - min: 0.739m, max: 15.870m, mean: 4.821m
+[DEBUG] Horizontal FOV: 19.3 degrees
+Saved test_outputs_multicam\camera_0_logi_cam_c920e\comparison_metric_inverted.png
+
+============================================================
+Running: uv run generate_tuned_visualization.py --input-dir test_outputs_multicam\camera_0_logi_cam_c920e --output-dir test_outputs_multicam\camera_0_logi_cam_c920e
+============================================================
+Loading test data from test_outputs_multicam\camera_0_logi_cam_c920e...
+Image resolution: 640x480
+Generating mesh with optimal parameters...
+[DEBUG] Image size: 640x480, Focal length: 470.4px
+[DEBUG] Input depth (inverse) - min: 0.736, max: 15.916
+[DEBUG] Actual depth - min: 0.063m, max: 1.359m, mean: 0.293m
+[DEBUG] Horizontal FOV: 68.5 degrees
+Saved test_outputs_multicam\camera_0_logi_cam_c920e\tuned_visualization.png
+
+============================================================
+Running: uv run evaluate_visualizations.py --output-dir test_outputs_multicam\camera_0_logi_cam_c920e
+============================================================
+Starting Vision Agent Evaluation...
+
+--- Evaluating comparison_metric.png ---
+Prompt: This image shows three views (Top, Side, Front) of a 3D mesh created from a depth map.                        1. Does the geometry look coherent?                        2. Are there any obvious flying pixels or noise artifacts?                        3. Does the 'Side View' show a reasonable depth profile for a typical scene?                        Provide a brief assessment.
+Rate limit hit. Retrying in 5 seconds...
+Rate limit hit. Retrying in 10 seconds...
+
+Agent Assessment:
+Here's an assessment of the 3D mesh based on the provided views:
+
+1.  **Geometry Coherence:** The geometry appears to have some coherence. In the Top and Front views, we can observe that there are some identifiable regions and structures. The data points generally adhere to a somewhat consistent shape(s).
+
+2.  **Flying Pixels/Noise Artifacts:** Yes, there is evidence of flying pixels and some noise. You can see scattered points, especially in the Side and Top views, that are isolated from the main structure. These points are likely due to noise in the depth map where erroneous depth values were captured.
+
+3.  **Side View Depth Profile:** The 'Side View' shows a depth profile, but it's not immediately clear what the scene represents. There are depth variations but because of the noise can not be easily identified if is a coherent scene.
+
+**Brief Assessment:** The 3D mesh reconstruction is partially successful but suffers from noise. While the point cloud roughly forms identifiable shapes, scattered noise artifacts impact the quality of the reconstruction. Additional filtering or preprocessing of the depth map might be necessary to improve the result.
+
+--------------------------------------------------
+
+--- Evaluating comparison_metric_inverted.png ---
+Prompt: This image shows a 3D mesh where the depth might be inverted.                        Does the geometry look 'inside out' or incorrect compared to a normal 3D scene?                        Look at the 'Top View' and 'Side View'.                        Confirm if it looks distorted or inverted.
+
+Agent Assessment:
+Yes, the geometry does appear distorted and inverted. The object's apparent orientation and depth in all three views (Top, Side, Front) suggest an issue with coordinate system inversion or an incorrect transformation. The object's shape seems compressed or oddly positioned with respect to the axes, indicating that the depth information is likely inverted or misinterpreted.
+
+--------------------------------------------------
+
+--- Evaluating tuned_visualization.png ---
+Prompt: This is a point cloud visualization of a scene.                        Does the structure look like a recognizable 3D scene?                        Are the colors consistent with a natural image?                        Rate the visual quality from 1 to 10.
+Rate limit hit. Retrying in 5 seconds...
+Rate limit hit. Retrying in 10 seconds...
+Rate limit hit. Retrying in 20 seconds...
+
+Agent Assessment:
+Here's an analysis of the point cloud visualization:
+
+*   **Recognizable 3D Scene:** It's difficult to definitively say what the scene is without more context. However, the arrangement of points suggests some structure, possibly including vertical elements that seem like buildings.
+*   **Color Consistency:** The colors are fairly reasonable for a natural scene. There are white/gray points (suggesting reflections or bright areas), along with brown and darker points, which could represent building materials or shadows. The colors seems consistent with a real-world scene, but the point cloud is quite sparse.
+*   **Visual Quality:** Considering that it is a point cloud, it provides a reasonable representation. However, it is not visually appealing due to the sparsity and lack of detail. The grid lines detract from the focus as well.
+
+    Therefore, I would rate the quality a **6/10**.
+
+--------------------------------------------------
+

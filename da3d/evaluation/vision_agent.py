@@ -1,9 +1,8 @@
 import os
 import base64
-import json
 import time
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional
 
 try:
     from openai import OpenAI, APIError, RateLimitError

@@ -7,7 +7,6 @@ diagnostics to find exactly where the mapping might be going wrong.
 """
 
 import numpy as np
-import cv2
 import sys
 from pathlib import Path
 
@@ -69,27 +68,27 @@ def test_relative_depth_mapping(depth, width, height, depth_scale=0.5):
         depth_normalized = (depth_clamped - d_min) / (d_max - d_min)
     else:
         depth_normalized = np.zeros_like(depth_clamped)
-        print(f"  [ERROR] Depth range too small!")
+        print("  [ERROR] Depth range too small!")
 
-    print(f"\nStep 2: Normalization to 0-1")
+    print("\nStep 2: Normalization to 0-1")
     print(f"  Normalized range: [{depth_normalized.min():.4f}, {depth_normalized.max():.4f}]")
 
     # Step 3: Create centered coordinates
     aspect_ratio = width / height
     max_dim = max(width, height)
 
-    print(f"\nStep 3: Coordinate centering")
+    print("\nStep 3: Coordinate centering")
     print(f"  Aspect ratio: {aspect_ratio:.3f}")
     print(f"  Max dimension: {max_dim}")
 
     if width >= height:
         x_range = [-width/2, width/2]
         y_range = [(-height/2) * aspect_ratio, (height/2) * aspect_ratio]
-        print(f"  Mode: Landscape/Square")
+        print("  Mode: Landscape/Square")
     else:
         x_range = [(-width/2) / aspect_ratio, (width/2) / aspect_ratio]
         y_range = [-height/2, height/2]
-        print(f"  Mode: Portrait")
+        print("  Mode: Portrait")
 
     print(f"  X range: [{x_range[0]:.1f}, {x_range[1]:.1f}]")
     print(f"  Y range: [{y_range[0]:.1f}, {y_range[1]:.1f}]")
@@ -98,7 +97,7 @@ def test_relative_depth_mapping(depth, width, height, depth_scale=0.5):
     z_scale_factor = max_dim * 0.5
     z_values = depth_normalized * depth_scale * z_scale_factor
 
-    print(f"\nStep 4: Z scaling")
+    print("\nStep 4: Z scaling")
     print(f"  depth_scale: {depth_scale}")
     print(f"  z_scale_factor: {z_scale_factor}")
     print(f"  Z range: [{z_values.min():.1f}, {z_values.max():.1f}]")
@@ -108,7 +107,7 @@ def test_relative_depth_mapping(depth, width, height, depth_scale=0.5):
     y_span = y_range[1] - y_range[0]
     z_span = z_values.max() - z_values.min()
 
-    print(f"\nCoordinate space analysis:")
+    print("\nCoordinate space analysis:")
     print(f"  X span: {x_span:.1f}")
     print(f"  Y span: {y_span:.1f}")
     print(f"  Z span: {z_span:.1f}")
@@ -117,7 +116,7 @@ def test_relative_depth_mapping(depth, width, height, depth_scale=0.5):
     print(f"  Z:Y ratio: {z_span/y_span:.3f}")
 
     # Check specific corner and center points
-    print(f"\nSample 3D points:")
+    print("\nSample 3D points:")
 
     # Center point
     cy, cx = height // 2, width // 2
@@ -150,7 +149,7 @@ def test_metric_depth_mapping(depth, width, height, fx=470.4, fy=470.4, metric_s
     # Step 1: Scale depth values
     depth_scaled = depth * metric_scale
 
-    print(f"\nStep 1: Metric scaling")
+    print("\nStep 1: Metric scaling")
     print(f"  metric_depth_scale: {metric_scale}")
     print(f"  Original range: [{depth.min():.4f}, {depth.max():.4f}]")
     print(f"  Scaled range: [{depth_scaled.min():.4f}, {depth_scaled.max():.4f}] meters")
@@ -168,13 +167,13 @@ def test_metric_depth_mapping(depth, width, height, fx=470.4, fy=470.4, metric_s
     x_3d = (x_grid - cx) * z / fx
     y_3d = (y_grid - cy) * z / fy
 
-    print(f"\nStep 2: Perspective projection")
+    print("\nStep 2: Perspective projection")
     print(f"  Focal length: fx={fx}, fy={fy}")
     print(f"  Principal point: cx={cx:.1f}, cy={cy:.1f}")
     print(f"  FOV horizontal: {2 * np.arctan(width / (2 * fx)) * 180 / np.pi:.1f} degrees")
     print(f"  FOV vertical: {2 * np.arctan(height / (2 * fy)) * 180 / np.pi:.1f} degrees")
 
-    print(f"\nResulting 3D coordinates:")
+    print("\nResulting 3D coordinates:")
     print(f"  X range: [{x_3d.min():.3f}, {x_3d.max():.3f}] meters")
     print(f"  Y range: [{y_3d.min():.3f}, {y_3d.max():.3f}] meters")
     print(f"  Z range: [{z.min():.3f}, {z.max():.3f}] meters")
@@ -184,7 +183,7 @@ def test_metric_depth_mapping(depth, width, height, fx=470.4, fy=470.4, metric_s
     y_span = y_3d.max() - y_3d.min()
     z_span = z.max() - z.min()
 
-    print(f"\nCoordinate space analysis:")
+    print("\nCoordinate space analysis:")
     print(f"  X span: {x_span:.3f}m")
     print(f"  Y span: {y_span:.3f}m")
     print(f"  Z span: {z_span:.3f}m")
@@ -195,7 +194,7 @@ def test_metric_depth_mapping(depth, width, height, fx=470.4, fy=470.4, metric_s
         print(f"  Z:X ratio: {z_span/x_span:.3f}")
 
     # Sample points
-    print(f"\nSample 3D points:")
+    print("\nSample 3D points:")
 
     cy_idx, cx_idx = height // 2, width // 2
     print(f"  Center pixel [{cx_idx}, {cy_idx}]:")
@@ -278,10 +277,10 @@ def diagnose_common_issues(depth, width, height):
 
     # Issue 5: Focal length mismatch
     # Check if using default focal length
-    print(f"\n[i] Camera intrinsics check:")
-    print(f"    Default focal length (470.4) assumes ~60 degree FOV")
-    print(f"    If your webcam has different FOV, adjust --focal-length-x/y")
-    print(f"    Typical webcam: 60-90 degree FOV")
+    print("\n[i] Camera intrinsics check:")
+    print("    Default focal length (470.4) assumes ~60 degree FOV")
+    print("    If your webcam has different FOV, adjust --focal-length-x/y")
+    print("    Typical webcam: 60-90 degree FOV")
     print(f"    For 90 deg FOV on {width}px: fx = {width / (2 * np.tan(45 * np.pi / 180)):.1f}")
     print(f"    For 60 deg FOV on {width}px: fx = {width / (2 * np.tan(30 * np.pi / 180)):.1f}")
 

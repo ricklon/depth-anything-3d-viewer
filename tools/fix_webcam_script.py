@@ -1,4 +1,3 @@
-import re
 
 # Read the file
 with open('test_webcam_single_frame.py', 'r', encoding='utf-8') as f:

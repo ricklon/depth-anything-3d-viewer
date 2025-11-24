@@ -18,7 +18,7 @@ print(f"Depth shape: {depth.shape}")
 print(f"Image dtype: {image.dtype}, range: [{image.min()}, {image.max()}]")
 print(f"Depth dtype: {depth.dtype}, range: [{depth.min():.6f}, {depth.max():.6f}]")
 
-print(f"\nDepth statistics:")
+print("\nDepth statistics:")
 print(f"  Mean: {depth.mean():.6f}")
 print(f"  Median: {np.median(depth):.6f}")
 print(f"  Std: {depth.std():.6f}")
@@ -26,10 +26,10 @@ print(f"  5th percentile: {np.percentile(depth, 5):.6f}")
 print(f"  95th percentile: {np.percentile(depth, 95):.6f}")
 
 # Check if depth is inverse depth (disparity) or actual depth
-print(f"\nDepth interpretation:")
-print(f"  If this is DISPARITY (inverse depth): higher values = CLOSER")
-print(f"  If this is DEPTH: higher values = FARTHER")
-print(f"  Depth-Anything V2 outputs: INVERSE DEPTH (disparity)")
+print("\nDepth interpretation:")
+print("  If this is DISPARITY (inverse depth): higher values = CLOSER")
+print("  If this is DEPTH: higher values = FARTHER")
+print("  Depth-Anything V2 outputs: INVERSE DEPTH (disparity)")
 
 # Visualize depth distribution
 fig, axes = plt.subplots(2, 3, figsize=(18, 12))
@@ -78,7 +78,7 @@ plt.colorbar(im3, ax=axes[1, 2])
 
 plt.tight_layout()
 plt.savefig('depth_data_analysis.png', dpi=150)
-print(f"\nSaved depth_data_analysis.png")
+print("\nSaved depth_data_analysis.png")
 
 # Now let's check what the 3D mesh looks like
 print("\n" + "="*80)
@@ -110,25 +110,25 @@ except Exception as e:
     exit(1)
 
 vertices = np.asarray(mesh.vertices)
-print(f"\nMesh statistics:")
+print("\nMesh statistics:")
 print(f"  Vertices: {len(vertices)}")
 print(f"  Triangles: {len(mesh.triangles)}")
 
-print(f"\nVertex coordinates (X, Y, Z):")
+print("\nVertex coordinates (X, Y, Z):")
 print(f"  X range: [{vertices[:, 0].min():.3f}, {vertices[:, 0].max():.3f}] meters")
 print(f"  Y range: [{vertices[:, 1].min():.3f}, {vertices[:, 1].max():.3f}] meters")
 print(f"  Z range: [{vertices[:, 2].min():.3f}, {vertices[:, 2].max():.3f}] meters")
 
-print(f"\nCoordinate system:")
-print(f"  X: Left (-) to Right (+)")
-print(f"  Y: Top (-) to Bottom (+) [image coords, inverted in viewer]")
-print(f"  Z: Camera (0) to Scene (+)")
+print("\nCoordinate system:")
+print("  X: Left (-) to Right (+)")
+print("  Y: Top (-) to Bottom (+) [image coords, inverted in viewer]")
+print("  Z: Camera (0) to Scene (+)")
 
 # Check if Z values make sense for metric depth
-print(f"\nMetric depth interpretation:")
+print("\nMetric depth interpretation:")
 print(f"  Z mean: {vertices[:, 2].mean():.3f}m")
 print(f"  Z median: {np.median(vertices[:, 2]):.3f}m")
-print(f"  Expected range for typical webcam scene: 0.5m - 5m")
+print("  Expected range for typical webcam scene: 0.5m - 5m")
 
 # Analyze the bounding box
 bbox_size = [
@@ -136,7 +136,7 @@ bbox_size = [
     vertices[:, 1].max() - vertices[:, 1].min(),
     vertices[:, 2].max() - vertices[:, 2].min()
 ]
-print(f"\nBounding box size:")
+print("\nBounding box size:")
 print(f"  Width (X): {bbox_size[0]:.3f}m")
 print(f"  Height (Y): {bbox_size[1]:.3f}m")
 print(f"  Depth (Z): {bbox_size[2]:.3f}m")
@@ -145,7 +145,7 @@ print(f"  Depth (Z): {bbox_size[2]:.3f}m")
 aspect_ratio = bbox_size[0] / bbox_size[1]
 print(f"\nAspect ratio (W/H): {aspect_ratio:.2f}")
 print(f"  Image aspect ratio: {image.shape[1] / image.shape[0]:.2f}")
-print(f"  Should be similar if projection is correct")
+print("  Should be similar if projection is correct")
 
 print("\n" + "="*80)
 print("ANALYSIS COMPLETE")

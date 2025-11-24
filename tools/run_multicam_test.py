@@ -1,5 +1,4 @@
 import subprocess
-import sys
 import os
 from pathlib import Path
 import time
@@ -74,24 +73,24 @@ def main():
 
             # 1. Capture and Generate Depth
             print("\n[Step 1] Capturing and Generating Depth...")
-            cmd_capture = f"uv run test_webcam_single_frame.py --camera-id {cam_id} --output-dir {output_dir} --no-interactive"
+            cmd_capture = f"uv run tests/test_webcam_single_frame.py --camera-id {cam_id} --output-dir {output_dir} --no-interactive"
             if not run_command(cmd_capture, log_file):
                 print(f"Skipping remaining tests for Camera {cam_id} due to capture failure.")
                 continue
 
             # 2. Generate Mode Comparison
             print("\n[Step 2] Generating Mode Comparison Plots...")
-            cmd_compare = f"uv run generate_mode_comparison.py --input-dir {output_dir} --output-dir {output_dir}"
+            cmd_compare = f"uv run tools/generate_mode_comparison.py --input-dir {output_dir} --output-dir {output_dir}"
             run_command(cmd_compare, log_file)
 
             # 3. Generate Tuned Visualization
             print("\n[Step 3] Generating Tuned Point Cloud...")
-            cmd_tuned = f"uv run generate_tuned_visualization.py --input-dir {output_dir} --output-dir {output_dir}"
+            cmd_tuned = f"uv run tools/generate_tuned_visualization.py --input-dir {output_dir} --output-dir {output_dir}"
             run_command(cmd_tuned, log_file)
 
             # 4. Run Vision Agent Evaluation
             print("\n[Step 4] Running Vision Agent Evaluation...")
-            cmd_eval = f"uv run evaluate_visualizations.py --output-dir {output_dir}"
+            cmd_eval = f"uv run tools/evaluate_visualizations.py --output-dir {output_dir}"
             run_command(cmd_eval, log_file)
 
         print(f"\n>>> COMPLETED CAMERA {cam_id}")

@@ -1,0 +1,4 @@
+SOR ENABLED: Average time: 178.96ms (5.59 FPS)
+SOR DISABLED: Average time: 131.22ms (7.62 FPS)
+
+Note: Real-time performance might be limited by mesh generation speed.

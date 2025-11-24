@@ -657,7 +657,7 @@ class RealTime3DViewer:
         view_control.set_up([0, 1, 0])
         view_control.set_zoom(0.7)  # 0.7 frames the scene well without being too far
 
-        print(f"\n=== Real-Time 3D Viewer ===")
+        print("\n=== Real-Time 3D Viewer ===")
         print("Controls:")
         print("  Mouse drag: Rotate")
         print("  Mouse wheel: Zoom")

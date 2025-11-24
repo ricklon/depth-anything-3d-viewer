@@ -19,7 +19,6 @@
 
 import numpy as np
 import cv2
-from scipy.ndimage import map_coordinates
 
 
 class DepthProjector:
@@ -124,7 +123,7 @@ class DepthProjector:
         # Debug: Store displacement stats for first call
         if not hasattr(self, '_debug_printed'):
             disp_mag = np.sqrt(self.last_displacement_x**2 + self.last_displacement_y**2)
-            print(f"\n=== Displacement Debug ===")
+            print("\n=== Displacement Debug ===")
             print(f"Displacement X range: [{self.last_displacement_x.min():.2f}, {self.last_displacement_x.max():.2f}]")
             print(f"Displacement Y range: [{self.last_displacement_y.min():.2f}, {self.last_displacement_y.max():.2f}]")
             print(f"Displacement magnitude range: [{disp_mag.min():.2f}, {disp_mag.max():.2f}]")

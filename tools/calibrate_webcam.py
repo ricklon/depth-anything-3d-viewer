@@ -127,7 +127,7 @@ def calibrate_webcam(camera_id=0, checkerboard_size=(9, 6)):
         print("="*60)
 
         print("\nUse these values with metric depth:")
-        print(f"da3d webcam3d --metric --encoder vits \\")
+        print("da3d webcam3d --metric --encoder vits \\")
         print(f"  --focal-length-x {fx:.1f} \\")
         print(f"  --focal-length-y {fy:.1f} \\")
         print(f"  --principal-point-x {cx:.1f} \\")

@@ -5,12 +5,16 @@ import cv2
 import numpy as np
 import open3d as o3d
 from pathlib import Path
-import subprocess
 import sys
 
 # Ensure parent Video-Depth-Anything is in path
-parent_dir = os.path.dirname(os.path.abspath(__file__))
-github_dir = os.path.dirname(parent_dir)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+github_dir = os.path.dirname(project_root)
+
+# Add project root to sys.path
+sys.path.append(project_root)
+
 video_depth_sibling = os.path.join(github_dir, 'Video-Depth-Anything')
 if os.path.exists(os.path.join(video_depth_sibling, 'video_depth_anything')):
     sys.path.insert(0, video_depth_sibling)
@@ -111,13 +115,13 @@ def create_dummy_test_data(img_path, depth_path):
 def generate_report(output_dir, commit_id):
     report_path = output_dir / "report.md"
     with open(report_path, "w") as f:
-        f.write(f"# Visual Test Report\n")
+        f.write("# Visual Test Report\n")
         f.write(f"**Commit:** {commit_id}\n")
         f.write(f"**Date:** {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write("## Rendered Views\n")
         f.write("| Front | Side | Top |\n")
         f.write("|-------|------|-----|\n")
-        f.write(f"| ![Front](view_front.png) | ![Side](view_side.png) | ![Top](view_top.png) |\n")
+        f.write("| ![Front](view_front.png) | ![Side](view_side.png) | ![Top](view_top.png) |\n")
     print(f"Report generated at {report_path}")
 
 if __name__ == "__main__":

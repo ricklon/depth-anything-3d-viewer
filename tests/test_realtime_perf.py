@@ -1,6 +1,5 @@
 import time
 import numpy as np
-import open3d as o3d
 from da3d.viewing.mesh import DepthMeshViewer
 
 def test_performance():

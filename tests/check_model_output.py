@@ -1,7 +1,6 @@
 
 import torch
 import numpy as np
-import cv2
 import sys
 import os
 from pathlib import Path

@@ -1,0 +1,62 @@
+================================================================================
+DATA ANALYSIS
+================================================================================
+
+Image shape: (480, 640, 3)
+Depth shape: (480, 640)
+Image dtype: uint8, range: [0, 255]
+Depth dtype: float32, range: [0.343426, 10.099540]
+
+Depth statistics:
+  Mean: 5.169149
+  Median: 4.469983
+  Std: 2.965735
+  5th percentile: 1.179620
+  95th percentile: 9.298477
+
+Depth interpretation:
+  If this is DISPARITY (inverse depth): higher values = CLOSER
+  If this is DEPTH: higher values = FARTHER
+  Depth-Anything V2 outputs: INVERSE DEPTH (disparity)
+
+Saved depth_data_analysis.png
+
+================================================================================
+3D MESH GENERATION ANALYSIS
+================================================================================
+[DEBUG] Image size: 320x240, Focal length: 470.4px
+[DEBUG] Input depth (inverse) - min: 0.350, max: 10.099
+[DEBUG] Actual depth - min: 0.099m, max: 2.857m, mean: 0.327m
+[DEBUG] Horizontal FOV: 37.6 degrees
+
+Mesh statistics:
+  Vertices: 76800
+  Triangles: 152482
+
+Vertex coordinates (X, Y, Z):
+  X range: [-33.754, 258.486] meters
+  Y range: [-23.891, 73.291] meters
+  Z range: [-914.223, -31.687] meters
+
+Coordinate system:
+  X: Left (-) to Right (+)
+  Y: Top (-) to Bottom (+) [image coords, inverted in viewer]
+  Z: Camera (0) to Scene (+)
+
+Metric depth interpretation:
+  Z mean: -104.633m
+  Z median: -71.500m
+  Expected range for typical webcam scene: 0.5m - 5m
+
+Bounding box size:
+  Width (X): 292.239m
+  Height (Y): 97.182m
+  Depth (Z): 882.536m
+
+Aspect ratio (W/H): 3.01
+  Image aspect ratio: 1.33
+  Should be similar if projection is correct
+
+================================================================================
+ANALYSIS COMPLETE
+================================================================================

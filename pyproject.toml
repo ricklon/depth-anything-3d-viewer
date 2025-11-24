@@ -115,3 +115,8 @@ explicit = true
 [tool.uv.sources]
 torch = { index = "pytorch-cu121" }
 torchvision = { index = "pytorch-cu121" }
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.2",
+]

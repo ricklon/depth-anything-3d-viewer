@@ -103,7 +103,7 @@ def capture_frame(
             np.save(depth_path, depth)
             cv2.imwrite(depth_vis_path, depth_colored)
 
-            print(f"\nCaptured!")
+            print("\nCaptured!")
             print(f"  RGB image: {rgb_path}")
             print(f"  Depth data: {depth_path}")
             print(f"  Depth visualization: {depth_vis_path}")
@@ -117,12 +117,12 @@ def capture_frame(
     cv2.destroyAllWindows()
 
     if captured:
-        print(f"\nTo view in 3D:")
+        print("\nTo view in 3D:")
         print(f"  uv run da3d view3d {rgb_path} {depth_path} --metric --focal-length-x 476 --focal-length-y 476")
         print("\nTo compare different focal lengths:")
-        print(f"  # Wrong focal length (stretched):")
+        print("  # Wrong focal length (stretched):")
         print(f"  uv run da3d view3d {rgb_path} {depth_path} --metric --focal-length-x 1430 --focal-length-y 1430")
-        print(f"  # Correct focal length:")
+        print("  # Correct focal length:")
         print(f"  uv run da3d view3d {rgb_path} {depth_path} --metric --focal-length-x 476 --focal-length-y 476")
 
 

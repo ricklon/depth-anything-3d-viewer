@@ -34,7 +34,7 @@ from utils.dc_utils import read_video_frames, save_video
 
 # Da3d package imports (from this package)
 from da3d.projection import DepthProjector, InteractiveParallaxController
-from da3d.viewing import DepthMeshViewer, view_depth_3d, RealTime3DViewer
+from da3d.viewing import DepthMeshViewer, RealTime3DViewer
 
 
 MODEL_CONFIGS = {
@@ -58,7 +58,7 @@ def video_command(args):
 
     if not checkpoint_path.exists():
         print(f"Error: Checkpoint not found at {checkpoint_path}")
-        print(f"Please download checkpoints using: bash get_weights.sh")
+        print("Please download checkpoints using: bash get_weights.sh")
         sys.exit(1)
 
     # Load model
@@ -165,7 +165,7 @@ def process_video_streaming(args, model, device):
 
 def webcam_command(args):
     """Real-time depth estimation from webcam."""
-    print(f"Starting webcam depth estimation...")
+    print("Starting webcam depth estimation...")
     print(f"Model: {args.encoder}, Camera: {args.camera_id}")
     print("Press 'q' to quit, 's' to save current frame, 'r' to start/stop recording")
 
@@ -178,7 +178,7 @@ def webcam_command(args):
 
     if not checkpoint_path.exists():
         print(f"Error: Checkpoint not found at {checkpoint_path}")
-        print(f"Please download checkpoints using: bash get_weights.sh")
+        print("Please download checkpoints using: bash get_weights.sh")
         sys.exit(1)
 
     # Load streaming model for webcam
@@ -407,7 +407,7 @@ def screen_command(args):
         print("Install with: uv pip install mss")
         sys.exit(1)
 
-    print(f"Starting screen capture depth estimation...")
+    print("Starting screen capture depth estimation...")
     print(f"Model: {args.encoder}, Monitor: {args.monitor}, Target FPS: {args.fps}")
     print("Press 'q' to quit, 's' to save current frame, 'r' to start/stop recording")
 
@@ -420,7 +420,7 @@ def screen_command(args):
 
     if not checkpoint_path.exists():
         print(f"Error: Checkpoint not found at {checkpoint_path}")
-        print(f"Please download checkpoints using: bash get_weights.sh")
+        print("Please download checkpoints using: bash get_weights.sh")
         sys.exit(1)
 
     # Load streaming model for screen capture
@@ -438,8 +438,8 @@ def screen_command(args):
             x, y, width, height = map(int, args.region.split(','))
             monitor = {"top": y, "left": x, "width": width, "height": height}
             print(f"Capturing region: x={x}, y={y}, width={width}, height={height}")
-        except:
-            print(f"Error: Invalid region format. Use 'x,y,width,height' (e.g., '0,0,1920,1080')")
+        except ValueError:
+            print("Error: Invalid region format. Use 'x,y,width,height' (e.g., '0,0,1920,1080')")
             sys.exit(1)
     else:
         # Capture specified monitor
@@ -591,7 +591,7 @@ def screen3d_command(args):
         print("Install with: uv sync")
         sys.exit(1)
 
-    print(f"Starting 3D screen capture with parallax effect...")
+    print("Starting 3D screen capture with parallax effect...")
     print(f"Model: {args.encoder}, Monitor: {args.monitor}, Target FPS: {args.fps}")
 
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -603,7 +603,7 @@ def screen3d_command(args):
 
     if not checkpoint_path.exists():
         print(f"Error: Checkpoint not found at {checkpoint_path}")
-        print(f"Please download checkpoints using: bash get_weights.sh")
+        print("Please download checkpoints using: bash get_weights.sh")
         sys.exit(1)
 
     # Load streaming model
@@ -620,8 +620,8 @@ def screen3d_command(args):
             x, y, width, height = map(int, args.region.split(','))
             monitor = {"top": y, "left": x, "width": width, "height": height}
             print(f"Capturing region: x={x}, y={y}, width={width}, height={height}")
-        except:
-            print(f"Error: Invalid region format. Use 'x,y,width,height'")
+        except ValueError:
+            print("Error: Invalid region format. Use 'x,y,width,height'")
             sys.exit(1)
     else:
         if args.monitor < 1 or args.monitor > len(sct.monitors) - 1:
@@ -641,7 +641,7 @@ def screen3d_command(args):
 
             vcam = pyvirtualcam.Camera(width=output_w, height=output_h, fps=args.fps)
             print(f"[OK] Virtual camera started: {output_w}x{output_h}@{args.fps}fps")
-            print(f"  You can now add 'OBS Virtual Camera' as a source in OBS Studio")
+            print("  You can now add 'OBS Virtual Camera' as a source in OBS Studio")
         except Exception as e:
             print(f"Warning: Could not initialize virtual camera: {e}")
             print("Continuing without virtual camera output...")
@@ -811,7 +811,7 @@ def screen3d_command(args):
 
         # Build display based on toggles
         panels = []
-        labels = []
+
 
         # Always include original and 3D projection
         panels.append(('Original', frame_bgr))
@@ -984,17 +984,17 @@ def view3d_command(args):
         print("Install with: uv sync --extra metric")
         sys.exit(1)
 
-    print(f"Loading 3D mesh viewer...")
+    print("Loading 3D mesh viewer...")
     print(f"Image: {args.image}")
     print(f"Depth: {args.depth}")
 
     if args.metric:
-        print(f"Metric depth mode enabled")
+        print("Metric depth mode enabled")
         print(f"  Focal length: fx={args.focal_length_x:.1f}, fy={args.focal_length_y:.1f}")
         if args.principal_point_x is not None and args.principal_point_y is not None:
             print(f"  Principal point: cx={args.principal_point_x:.1f}, cy={args.principal_point_y:.1f}")
         else:
-            print(f"  Principal point: image center (auto)")
+            print("  Principal point: image center (auto)")
 
     viewer = DepthMeshViewer(
         depth_scale=args.depth_scale,
@@ -1030,7 +1030,7 @@ def webcam3d_command(args):
         print("Install with: uv sync --extra metric")
         sys.exit(1)
 
-    print(f"Starting real-time 3D webcam viewer...")
+    print("Starting real-time 3D webcam viewer...")
     print(f"Model: {args.encoder}, Camera: {args.camera_id}")
 
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -1042,7 +1042,7 @@ def webcam3d_command(args):
 
     if not checkpoint_path.exists():
         print(f"Error: Checkpoint not found at {checkpoint_path}")
-        print(f"Please download checkpoints using: bash get_weights.sh")
+        print("Please download checkpoints using: bash get_weights.sh")
         sys.exit(1)
 
     # Load streaming model
@@ -1083,11 +1083,13 @@ def webcam3d_command(args):
     # Apply High Quality Preset if requested
     if args.high_quality:
         print("\n[INFO] High Quality Preset Enabled")
-        print("  - Resolution: 960p")
+        print("  - Resolution: 1024p")
+        print("  - Input Size: 1022 (High Detail)")
         print("  - Subsample: 2")
         print("  - Metric Depth: Enabled")
         print("  - SOR: Neighbors=100, Std Ratio=0.5")
-        args.max_res = 960
+        args.max_res = 1024
+        args.input_size = 1022 # Multiple of 14 closest to 1024
         args.subsample = 2
         args.metric = True
         args.sor_neighbors = 100
@@ -1183,7 +1185,7 @@ def screen3d_viewer_command(args):
         print("Install with: uv sync --extra metric")
         sys.exit(1)
 
-    print(f"Starting real-time 3D screen viewer...")
+    print("Starting real-time 3D screen viewer...")
     print(f"Model: {args.encoder}, Monitor: {args.monitor}")
 
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -1195,7 +1197,7 @@ def screen3d_viewer_command(args):
 
     if not checkpoint_path.exists():
         print(f"Error: Checkpoint not found at {checkpoint_path}")
-        print(f"Please download checkpoints using: bash get_weights.sh")
+        print("Please download checkpoints using: bash get_weights.sh")
         sys.exit(1)
 
     # Apply High Quality Preset if requested
@@ -1230,7 +1232,7 @@ def screen3d_viewer_command(args):
             monitor = {"top": y, "left": x, "width": width, "height": height}
             print(f"Capturing region: x={x}, y={y}, width={width}, height={height}")
         except:
-            print(f"Error: Invalid region format. Use 'x,y,width,height'")
+            print("Error: Invalid region format. Use 'x,y,width,height'")
             sys.exit(1)
     else:
         if args.monitor < 1 or args.monitor > len(sct.monitors) - 1:
@@ -1559,7 +1561,7 @@ Examples:
     webcam3d_parser.add_argument('--sor-std-ratio', type=float, default=1.0,
                                 help='Standard deviation ratio for Statistical Outlier Removal (default: 1.0, lower = more aggressive)')
     webcam3d_parser.add_argument('--high-quality', action='store_true',
-                                help='Enable high-quality preset (960p, subsample=2, metric depth, optimized SOR)')
+                                help='Enable high-quality preset (1024p input, subsample=2, metric depth, optimized SOR)')
     webcam3d_parser.set_defaults(func=webcam3d_command)
 
     # Screen3D Viewer command

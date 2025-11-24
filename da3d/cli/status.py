@@ -5,7 +5,6 @@ Verifies all dependencies and provides diagnostic information.
 """
 
 import sys
-import os
 from pathlib import Path
 
 

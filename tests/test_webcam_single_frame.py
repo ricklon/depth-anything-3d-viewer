@@ -28,6 +28,10 @@ if (video_depth_sibling / 'video_depth_anything').exists():
 elif (parent_dir / 'video_depth_anything').exists():
     sys.path.insert(0, str(parent_dir))
 
+# Add project root to sys.path to ensure da3d can be imported
+if str(parent_dir) not in sys.path:
+    sys.path.insert(0, str(parent_dir))
+
 # Import Video-Depth-Anything
 try:
     from video_depth_anything.video_depth_stream import VideoDepthAnything as VideoDepthAnythingStream
@@ -148,7 +152,7 @@ def generate_depth(frame_rgb, encoder='vits', use_metric=False, checkpoints_dir=
 
     # Analyze depth distribution
     percentiles = [0, 5, 25, 50, 75, 95, 100]
-    print(f"       Percentiles: ", end="")
+    print("       Percentiles: ", end="")
     for p in percentiles:
         val = np.percentile(depth, p)
         print(f"{p}%={val:.3f} ", end="")
@@ -177,7 +181,7 @@ def analyze_3d_mapping(depth, frame_rgb):
     depth_max = depth.max()
     depth_range = depth_max - depth_min
 
-    print(f"\n  Depth statistics:")
+    print("\n  Depth statistics:")
     print(f"    Min: {depth_min:.6f}")
     print(f"    Max: {depth_max:.6f}")
     print(f"    Range: {depth_range:.6f}")
@@ -189,12 +193,12 @@ def analyze_3d_mapping(depth, frame_rgb):
     # Simulate the normalization that happens in create_mesh_from_depth
     depth_normalized = (depth - depth_min) / (depth_max - depth_min)
 
-    print(f"\n  After normalization (0-1):")
+    print("\n  After normalization (0-1):")
     print(f"    Min: {depth_normalized.min():.6f}")
     print(f"    Max: {depth_normalized.max():.6f}")
 
     # Check what happens at different depth scales
-    print(f"\n  3D Z-coordinate analysis at different depth_scale values:")
+    print("\n  3D Z-coordinate analysis at different depth_scale values:")
     for scale in [0.1, 0.3, 0.5, 0.8, 1.0]:
         # Calculate z_scale_factor as in the code
         max_dim = max(w, h)
@@ -203,7 +207,7 @@ def analyze_3d_mapping(depth, frame_rgb):
         print(f"    scale={scale}: Z range = [{z_values.min():.1f}, {z_values.max():.1f}] pixels")
 
     # Test metric depth calculation
-    print(f"\n  Metric depth perspective projection test:")
+    print("\n  Metric depth perspective projection test:")
     # Typical webcam focal length
     fx = fy = 470.4
     cx, cy = w / 2.0, h / 2.0
@@ -232,7 +236,7 @@ def analyze_3d_mapping(depth, frame_rgb):
         print("           Try using --metric-depth-scale to adjust")
 
     # Analyze aspect ratio handling
-    print(f"\n  Aspect ratio analysis:")
+    print("\n  Aspect ratio analysis:")
     aspect_ratio = w / h
     print(f"    Aspect ratio: {aspect_ratio:.3f}")
 
@@ -386,9 +390,9 @@ def test_3d_variations(frame_rgb, depth, output_dir='./test_outputs', no_interac
     np.save(str(Path(output_dir) / 'depth_raw.npy'), depth)
 
     print(f"  Saved test files to {output_dir}/")
-    print(f"    - captured_frame.png")
-    print(f"    - depth_colormap.png")
-    print(f"    - depth_raw.npy")
+    print("    - captured_frame.png")
+    print("    - depth_colormap.png")
+    print("    - depth_raw.npy")
 
     # Test each variation
     for i, var in enumerate(variations):
@@ -424,7 +428,7 @@ def test_3d_variations(frame_rgb, depth, output_dir='./test_outputs', no_interac
 
             # Display
             if not no_interactive:
-                print(f"    Opening 3D viewer...")
+                print("    Opening 3D viewer...")
                 viewer.view_mesh(
                     mesh,
                     window_name=f"Test {i+1}: {var['name']}",
@@ -433,7 +437,7 @@ def test_3d_variations(frame_rgb, depth, output_dir='./test_outputs', no_interac
                     show_wireframe=False
                 )
             else:
-                print(f"    Skipping interactive viewer (headless mode)")
+                print("    Skipping interactive viewer (headless mode)")
 
         except Exception as e:
             print(f"    [ERROR] {e}")

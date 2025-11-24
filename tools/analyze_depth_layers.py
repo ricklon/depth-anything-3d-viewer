@@ -9,15 +9,20 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 # Ensure parent Video-Depth-Anything is in path
-parent_dir = os.path.dirname(os.path.abspath(__file__))
-github_dir = os.path.dirname(parent_dir)
+# Ensure parent Video-Depth-Anything is in path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+github_dir = os.path.dirname(project_root)
+
+# Add project root to sys.path so we can import da3d
+sys.path.append(project_root)
 
 # Check for Video-Depth-Anything in sibling directory
 video_depth_sibling = os.path.join(github_dir, 'Video-Depth-Anything')
 if os.path.exists(os.path.join(video_depth_sibling, 'video_depth_anything')):
     sys.path.insert(0, video_depth_sibling)
-elif os.path.exists(os.path.join(parent_dir, 'Video-Depth-Anything')):
-    sys.path.insert(0, os.path.join(parent_dir, 'Video-Depth-Anything'))
+elif os.path.exists(os.path.join(project_root, 'Video-Depth-Anything')):
+    sys.path.insert(0, os.path.join(project_root, 'Video-Depth-Anything'))
 
 try:
     from video_depth_anything.video_depth import VideoDepthAnything

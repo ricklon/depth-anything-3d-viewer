@@ -5,6 +5,13 @@ from da3d.viewing.mesh import DepthMeshViewer
 import cv2
 import os
 from pathlib import Path
+import sys
+import os
+
+# Add project root to path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+sys.path.append(project_root)
 
 def load_test_data(output_dir='./test_outputs'):
     image_path = Path(output_dir) / 'captured_frame.png'

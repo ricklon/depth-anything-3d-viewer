@@ -2,10 +2,12 @@ import os
 import sys
 from pathlib import Path
 import argparse
-import time
 
 # Add project root to path to ensure we can import da3d
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Add project root to path to ensure we can import da3d
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+sys.path.append(project_root)
 
 try:
     from da3d.evaluation.vision_agent import VisionAgent

@@ -1,6 +1,5 @@
 import pytest
 import os
-from pathlib import Path
 import numpy as np
 import cv2
 from da3d.evaluation.vision_agent import VisionAgent
