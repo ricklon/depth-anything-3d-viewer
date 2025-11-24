@@ -1,46 +1,37 @@
 # Project Next Steps & Roadmap
 
-## 1. Metric Depth Refinement
-The metric depth visualization is working but can be improved based on Vision Agent feedback (currently rated 6/10).
+## 1. Codebase Cleanup & Best Practices
+The project has grown organically and needs refactoring to be production-ready.
 
-- [ ] **Tune Outlier Removal (SOR):**
-    - Experiment with `sor_neighbors` and `sor_std_ratio` to find the best balance between noise removal and detail preservation.
-    - [x] Expose these parameters to the CLI (currently only in Python API).
-- [ ] **Address Sparsity:**
-    - The Vision Agent noted the point cloud was "sparse".
-    - [x] Increased point size in visualization script.
-    - Investigate mesh smoothing or surface reconstruction techniques (e.g., Poisson reconstruction) for metric depth.
-    - Consider "hole filling" for invalid pixels in the depth map.
-- [x] **Verify Scale Accuracy:**
-    - [x] Use a known object of known size to verify the real-world metric scale (meters) is accurate.
-    - **Result:** Calibrated `metric_depth_scale` to `0.005` based on measurements (1cm object measured as ~2cm with 0.01 scale).
-- [x] **Investigate Layering Artifacts:**
-    - User reported "layering" when viewing from the side.
-    - [x] Created `analyze_depth_layers.py` to capture and visualize this issue.
-    - [x] **Findings:** Layering is likely due to disparity quantization exploding at distance (1/disparity).
-    - [x] **Fix:** Implemented Bilateral Filter and inverted depth logic (treating output as disparity) to mitigate this.
+- [ ] **Package Structure:**
+    - Ensure `da3d` is a proper Python package with clean imports.
+    - Move scripts (`verify_scale.py`, `analyze_depth_layers.py`) into the package or a `tools/` directory.
+- [ ] **Type Hinting & Linting:**
+    - Add comprehensive type hints to all functions.
+    - Set up `ruff` or `pylint` for code quality checks.
+- [ ] **Configuration Management:**
+    - Move hardcoded constants (like default focal lengths, model paths) to a config file (YAML/TOML).
+- [ ] **Documentation:**
+    - Add docstrings to all classes and methods.
+    - Update `README.md` with clear installation and usage instructions for the new features.
 
-## 2. Performance Optimization
-- [x] **Optimize Mesh Generation:**
-    - The current numpy-based mesh generation can be slow at high resolutions (1280p+).
-    - [x] Replaced Python loops with vectorized NumPy operations in `_create_grid_mesh`.
-    - Investigate moving vertex generation to GPU or using optimized Open3D functions.
-- [x] **Resolve Dependencies:**
-    - [x] Suppressed `xformers` / `triton` warnings on Windows to clean up output.
-    - Ensure `pyvirtualcam` and `mss` work seamlessly across all platforms.
+## 2. Metric Depth Refinement (Ongoing)
+- [x] **Layering Fixes:**
+    - [x] Implemented bilateral smoothing.
+    - [x] Inverted metric depth logic (treating as disparity).
+    - [x] Increased input resolution to 1024p for high-quality preset.
+- [ ] **Further Tuning:**
+    - Continue to tweak SOR and smoothing parameters based on user feedback.
 
-## 3. User Experience & Features
-- [x] **CLI Improvements:**
-    - [x] Add CLI arguments for SOR parameters (`--sor-neighbors`, `--sor-ratio`).
-    - [x] Add a preset flag for "High Quality" vs "Performance" modes (wrapping the resolution/subsample settings).
-- [x] **Interactive Controls:**
-    - [x] Add keyboard shortcuts to adjust SOR parameters in real-time.
-    - [x] Add a "Reset Camera" button or key (now that we have a good default view).
+## 3. Testing & Validation
+- [x] **Automated Visual Testing:**
+    - [x] Created `tests/visual_test.py` and `tests/review_visuals.py`.
+    - [x] Integrated Vision Agent for automated feedback.
+- [ ] **Unit Tests:**
+    - Add unit tests for core logic (projection, mesh generation).
+
+## 4. Features
 - [ ] **Recording:**
-    - Improve recording capability to capture the 3D view directly (currently captures the window, which might have UI overlays).
-
-## 4. Testing & Validation
-- [ ] **Automated Visual Testing:**
-    - Create a workflow to automatically run the Vision Agent on new commits to track quality regression.
+    - Implement high-quality 3D recording (capturing the rendered view, not just the screen).
 - [ ] **Multi-Camera Support:**
-    - Ensure robust handling of multiple cameras (as seen with Camera 0 vs Camera 1 issues).
+    - Robustify camera selection and handling.
