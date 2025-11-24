@@ -3,12 +3,12 @@
 ## 1. Codebase Cleanup & Best Practices
 The project has grown organically and needs refactoring to be production-ready.
 
-- [ ] **Package Structure:**
-    - Ensure `da3d` is a proper Python package with clean imports.
-    - Move scripts (`verify_scale.py`, `analyze_depth_layers.py`) into the package or a `tools/` directory.
-- [ ] **Type Hinting & Linting:**
-    - Add comprehensive type hints to all functions.
-    - Set up `ruff` or `pylint` for code quality checks.
+- [x] **Package Structure:**
+    - [x] Ensure `da3d` is a proper Python package with clean imports.
+    - [x] Move scripts (`verify_scale.py`, `analyze_depth_layers.py`) into the package or a `tools/` directory.
+- [x] **Type Hinting & Linting:**
+    - [ ] Add comprehensive type hints to all functions.
+    - [x] Set up `ruff` or `pylint` for code quality checks.
 - [ ] **Configuration Management:**
     - Move hardcoded constants (like default focal lengths, model paths) to a config file (YAML/TOML).
 - [ ] **Documentation:**
