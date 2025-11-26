@@ -1,0 +1,31 @@
+
+# Depth Anything 3D Viewer Configuration
+
+model:
+  # Options: vits, vitb, vitl
+  default_encoder: vitl
+  checkpoints_dir: checkpoints
+
+camera:
+  # Default focal lengths (can be overridden by CLI args)
+  focal_length_x: 470.4
+  focal_length_y: 470.4
+  default_id: 0
+
+visualization:
+  max_res: 640
+  input_size: 518
+  target_fps: 30
+
+high_quality:
+  max_res: 1024
+  input_size: 1022
+  subsample: 2
+  sor_neighbors: 100
+  sor_std_ratio: 0.5
+  metric_depth_scale: 1.0
+
+sor:
+  # Statistical Outlier Removal defaults
+  neighbors: 50
+  std_ratio: 1.0

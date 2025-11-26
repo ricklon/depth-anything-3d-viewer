@@ -14,13 +14,13 @@ View yourself or your environment in real-time 3D:
 
 ```bash
 # Basic webcam 3D
-uv run vda webcam3d
+da3d webcam3d
 
 # Higher quality (slower)
-uv run vda webcam3d --subsample 2 --max-res 640
+da3d webcam3d --subsample 2 --max-res 640
 
 # Different camera
-uv run vda webcam3d --camera-id 1
+da3d webcam3d --camera-id 1
 ```
 
 ### Screen Capture 3D Viewer
@@ -29,13 +29,13 @@ Turn your screen into a live 3D mesh:
 
 ```bash
 # Capture primary monitor
-uv run vda screen3d-viewer
+da3d screen3d-viewer
 
 # Specific region
-uv run vda screen3d-viewer --region 0,0,1920,1080
+da3d screen3d-viewer --region 0,0,1920,1080
 
 # Higher FPS
-uv run vda screen3d-viewer --fps 15
+da3d screen3d-viewer --fps 15
 ```
 
 ## Quick Start Examples
@@ -43,25 +43,25 @@ uv run vda screen3d-viewer --fps 15
 ### Portrait Mode (Webcam)
 ```bash
 # Best settings for viewing yourself in 3D
-uv run vda webcam3d --depth-scale 0.6 --subsample 3 --max-res 480
+da3d webcam3d --depth-scale 0.6 --subsample 3 --max-res 480
 ```
 
 ### Gaming Scene (Screen)
 ```bash
 # Capture game window and view in 3D
-uv run vda screen3d-viewer --region 0,0,1920,1080 --depth-scale 0.5 --fps 10
+da3d screen3d-viewer --region 0,0,1920,1080 --depth-scale 0.5 --fps 10
 ```
 
 ### High Quality (Slower)
 ```bash
 # Maximum quality with smoothing
-uv run vda webcam3d --subsample 2 --smooth --max-res 640
+da3d webcam3d --subsample 2 --smooth --max-res 640
 ```
 
 ### Performance Mode
 ```bash
 # Fast preview with lower resolution
-uv run vda webcam3d --subsample 4 --max-res 320
+da3d webcam3d --subsample 4 --max-res 320
 ```
 
 ## Command Line Options
@@ -204,7 +204,7 @@ The mesh updates automatically as new frames arrive from your webcam or screen.
 ### 1. Live Portrait 3D Scanning
 
 ```bash
-uv run vda webcam3d --depth-scale 0.6 --subsample 3
+da3d webcam3d --depth-scale 0.6 --subsample 3
 ```
 
 View yourself in 3D! Move your head slowly to see the depth update. The mesh stays centered on the camera's view.
@@ -213,7 +213,7 @@ View yourself in 3D! Move your head slowly to see the depth update. The mesh sta
 
 ```bash
 # Capture game window
-uv run vda screen3d-viewer --region 0,0,1920,1080 --depth-scale 0.5
+da3d screen3d-viewer --region 0,0,1920,1080 --depth-scale 0.5
 ```
 
 Turn your game into a 3D scene. Orbit around to see how the depth estimation works on different game graphics.
@@ -221,7 +221,7 @@ Turn your game into a 3D scene. Orbit around to see how the depth estimation wor
 ### 3. Video Conferencing Background
 
 ```bash
-uv run vda webcam3d --invert-depth --depth-scale 0.5
+da3d webcam3d --invert-depth --depth-scale 0.5
 ```
 
 See yourself with inverted depth for interesting visual effects.
@@ -230,7 +230,7 @@ See yourself with inverted depth for interesting visual effects.
 
 ```bash
 # Record screen capture while viewing 3D
-uv run vda screen3d-viewer --monitor 2 --fps 15 --subsample 2
+da3d screen3d-viewer --monitor 2 --fps 15 --subsample 2
 ```
 
 Capture creative content or tutorials showing 3D depth in real-time.
@@ -444,16 +444,16 @@ for cam_id in cameras:
 
 ```bash
 # Step 1: Test your webcam
-uv run vda webcam  # Verify webcam works
+da3d webcam  # Verify webcam works
 
 # Step 2: Start 3D viewer with good defaults
-uv run vda webcam3d --depth-scale 0.6 --subsample 3
+da3d webcam3d --depth-scale 0.6 --subsample 3
 
 # Step 3: Adjust depth scale while viewing
 # (Restart with different --depth-scale values: try 0.4, 0.5, 0.7)
 
 # Step 4: Enable smoothing if needed
-uv run vda webcam3d --depth-scale 0.6 --subsample 3 --smooth
+da3d webcam3d --depth-scale 0.6 --subsample 3 --smooth
 ```
 
 ### Workflow 2: Screen Game Analysis
@@ -463,16 +463,16 @@ uv run vda webcam3d --depth-scale 0.6 --subsample 3 --smooth
 # (Use Windows Snipping Tool or similar to get coordinates)
 
 # Step 2: Start viewer with region
-uv run vda screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5
+da3d screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5
 
 # Step 3: Tune for performance
-uv run vda screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5 --max-res 400 --subsample 4
+da3d screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5 --max-res 400 --subsample 4
 
 # Step 4: Increase quality once performance is acceptable
-uv run vda screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5 --max-res 480 --subsample 3
+da3d screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5 --max-res 480 --subsample 3
 
 # Step 5: Reduce background clutter if needed
-uv run vda screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5 --depth-max-percentile 85
+da3d screen3d-viewer --region 100,100,1920,1080 --depth-scale 0.5 --depth-max-percentile 85
 ```
 
 ## See Also

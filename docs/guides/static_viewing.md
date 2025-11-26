@@ -10,16 +10,16 @@ Unlike the 2.5D parallax effect (`screen3d`), which displaces pixels in 2D space
 
 ```bash
 # View a depth map in 3D
-uv run vda view3d image.jpg depth.png
+da3d view3d image.jpg depth.png
 
 # Adjust depth scale for more dramatic effect
-uv run vda view3d image.jpg depth.png --depth-scale 150
+da3d view3d image.jpg depth.png --depth-scale 150
 
 # Full resolution (may be slow)
-uv run vda view3d image.jpg depth.png --subsample 1
+da3d view3d image.jpg depth.png --subsample 1
 
 # Invert depth (for reversed perspective)
-uv run vda view3d image.jpg depth.png --invert-depth
+da3d view3d image.jpg depth.png --invert-depth
 ```
 
 ## How It Works
@@ -96,40 +96,40 @@ Once the 3D viewer window opens, you can interact with the mesh:
 ### Basic viewing
 ```bash
 # Process a video frame first
-uv run vda video input.mp4 -o outputs/
+da3d video input.mp4 -o outputs/
 
 # View the first frame in 3D
-uv run vda view3d outputs/input_src.mp4_frame0001.jpg outputs/input_depth.mp4_frame0001.png
+da3d view3d outputs/input_src.mp4_frame0001.jpg outputs/input_depth.mp4_frame0001.png
 ```
 
 ### Dramatic depth effect
 ```bash
 # Use high depth scale for exaggerated 3D
-uv run vda view3d portrait.jpg portrait_depth.png --depth-scale 200
+da3d view3d portrait.jpg portrait_depth.png --depth-scale 200
 ```
 
 ### High quality (slower)
 ```bash
 # Full resolution with no subsampling
-uv run vda view3d scene.jpg scene_depth.png --subsample 1
+da3d view3d scene.jpg scene_depth.png --subsample 1
 ```
 
 ### Fast preview
 ```bash
 # Quarter resolution for quick viewing
-uv run vda view3d large_image.jpg large_depth.png --subsample 4
+da3d view3d large_image.jpg large_depth.png --subsample 4
 ```
 
 ### Inverted depth
 ```bash
 # Reverse the depth direction
-uv run vda view3d image.jpg depth.png --invert-depth
+da3d view3d image.jpg depth.png --invert-depth
 ```
 
 ### Custom background
 ```bash
 # White background for clean presentation
-uv run vda view3d image.jpg depth.png --background 1,1,1
+da3d view3d image.jpg depth.png --background 1,1,1
 ```
 
 ## Tips & Best Practices
@@ -153,13 +153,13 @@ uv run vda view3d image.jpg depth.png --background 1,1,1
 
 ```bash
 # 1. Generate depth from video
-uv run vda video input.mp4 --save-npz -o outputs/
+da3d video input.mp4 --save-npz -o outputs/
 
 # 2. Extract a frame pair
 # (manually save a frame from the video, or use video frame extraction)
 
 # 3. View in 3D
-uv run vda view3d outputs/frame.jpg outputs/frame_depth.npy
+da3d view3d outputs/frame.jpg outputs/frame_depth.npy
 ```
 
 ## Technical Details

@@ -414,11 +414,15 @@ See the `examples/` directory for complete Python examples:
 
 **GPU acceleration provides 10-20x faster performance!**
 
-The project is configured for CUDA 12.1 by default. After installation:
+The project supports:
+- **NVIDIA GPUs** (CUDA) - Windows/Linux
+- **Apple Silicon** (Metal/MPS) - macOS (M1/M2/M3)
+
+The project is configured for CUDA 12.1 by default on Windows/Linux. After installation:
 
 ```bash
 # Verify GPU is detected
-uv run python -c "import torch; print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"CPU only\"}')"
+uv run python -c "import torch; print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"MPS\" if hasattr(torch.backends, \"mps\") and torch.backends.mps.is_available() else \"CPU only\"}')"
 ```
 
 If you see "CPU only", follow the [GPU Setup Guide](GPU_SETUP.md) for detailed instructions.

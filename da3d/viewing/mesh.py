@@ -44,7 +44,7 @@ class DepthMeshViewer:
         principal_point_x: Optional[float] = None,
         principal_point_y: Optional[float] = None,
         metric_depth_scale: float = 1.0
-    ):
+    ) -> None:
         """
         Initialize the 3D mesh viewer.
 
@@ -87,12 +87,11 @@ class DepthMeshViewer:
         depth: np.ndarray,
         subsample: int = 1,
         invert_depth: bool = False,
-
         smooth_mesh: bool = True,
         use_sor: bool = True,
         sor_neighbors: int = 50,
         sor_std_ratio: float = 1.0
-    ):
+    ) -> o3d.geometry.Geometry:
         """
         Create a 3D geometry (mesh or point cloud) from an image and its depth map.
 
@@ -105,6 +104,9 @@ class DepthMeshViewer:
             use_sor: Apply Statistical Outlier Removal (metric depth only)
             sor_neighbors: Number of neighbors for SOR (default: 50)
             sor_std_ratio: Standard deviation ratio for SOR (default: 1.0, lower = more aggressive)
+
+        Returns:
+            Open3D geometry (TriangleMesh or PointCloud)
         """
         # Subsample for performance
         if subsample > 1:
@@ -396,13 +398,13 @@ class DepthMeshViewer:
 
     def view_mesh(
         self,
-        geometry,
+        geometry: o3d.geometry.Geometry,
         window_name: str = "3D Depth Viewer",
         width: int = 1280,
         height: int = 720,
         show_wireframe: bool = False,
         background_color: Tuple[float, float, float] = (0.1, 0.1, 0.1)
-    ):
+    ) -> None:
         """
         Display the 3D geometry (mesh or point cloud) in an interactive viewer window.
 
@@ -470,7 +472,7 @@ class DepthMeshViewer:
         subsample: int = 2,
         invert_depth: bool = False,
         **view_kwargs
-    ):
+    ) -> None:
         """
         Load image and depth map from files, create mesh, and display.
 
@@ -522,7 +524,7 @@ def view_depth_3d(
     invert_depth: bool = False,
     smooth: bool = True,
     display_mode: str = 'mesh'
-):
+) -> None:
     """
     Convenience function to quickly view a depth map in 3D.
 
@@ -570,7 +572,7 @@ class RealTime3DViewer:
         use_sor: bool = True,
         sor_neighbors: int = 50,
         sor_std_ratio: float = 1.0
-    ):
+    ) -> None:
         """
         Initialize real-time 3D viewer.
 
@@ -624,7 +626,7 @@ class RealTime3DViewer:
         )
         self.frame_count = 0
 
-    def initialize(self, width: int, height: int):
+    def initialize(self, width: int, height: int) -> None:
         """
         Initialize the Open3D visualizer window.
 
@@ -675,7 +677,7 @@ class RealTime3DViewer:
         self.vis.register_key_callback(ord('-'), self._decrease_sor_std)
         self.vis.register_key_callback(ord('='), self._increase_sor_std)
 
-    def _reset_view(self, vis):
+    def _reset_view(self, vis: o3d.visualization.VisualizerWithKeyCallback) -> bool:
         view_control = vis.get_view_control()
         view_control.set_front([0, 0, -1])
         view_control.set_lookat([0, 0, 0])
@@ -684,27 +686,27 @@ class RealTime3DViewer:
         print("[INFO] View reset")
         return False
 
-    def _decrease_sor_neighbors(self, vis):
+    def _decrease_sor_neighbors(self, vis: o3d.visualization.VisualizerWithKeyCallback) -> bool:
         self.sor_neighbors = max(10, self.sor_neighbors - 10)
         print(f"[INFO] SOR Neighbors: {self.sor_neighbors}")
         return False
 
-    def _increase_sor_neighbors(self, vis):
+    def _increase_sor_neighbors(self, vis: o3d.visualization.VisualizerWithKeyCallback) -> bool:
         self.sor_neighbors += 10
         print(f"[INFO] SOR Neighbors: {self.sor_neighbors}")
         return False
 
-    def _decrease_sor_std(self, vis):
+    def _decrease_sor_std(self, vis: o3d.visualization.VisualizerWithKeyCallback) -> bool:
         self.sor_std_ratio = max(0.1, self.sor_std_ratio - 0.1)
         print(f"[INFO] SOR Std Ratio: {self.sor_std_ratio:.1f}")
         return False
 
-    def _increase_sor_std(self, vis):
+    def _increase_sor_std(self, vis: o3d.visualization.VisualizerWithKeyCallback) -> bool:
         self.sor_std_ratio += 0.1
         print(f"[INFO] SOR Std Ratio: {self.sor_std_ratio:.1f}")
         return False
 
-    def update_mesh(self, image: np.ndarray, depth: np.ndarray, invert_depth: bool = False):
+    def update_mesh(self, image: np.ndarray, depth: np.ndarray, invert_depth: bool = False) -> None:
         """
         Update the 3D geometry (mesh or point cloud) with new frame data.
 
@@ -761,7 +763,7 @@ class RealTime3DViewer:
         # Check if window is still open
         return not self.vis.poll_events()
 
-    def close(self):
+    def close(self) -> None:
         """Close the viewer window."""
         if self.vis is not None:
             self.vis.destroy_window()

@@ -51,16 +51,17 @@ def check_module(module_name):
 
 
 def check_cuda():
-    """Check CUDA availability."""
+    """Check GPU availability (CUDA/MPS)."""
     try:
         import torch
-        cuda_available = torch.cuda.is_available()
-        if cuda_available:
+        if torch.cuda.is_available():
             device_name = torch.cuda.get_device_name(0)
             cuda_version = torch.version.cuda
             return True, f"{device_name} (CUDA {cuda_version})"
+        elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            return True, "Apple Metal (MPS) Acceleration"
         else:
-            return False, "CUDA not available - CPU mode only"
+            return False, "CUDA/MPS not available - CPU mode only"
     except Exception as e:
         return False, str(e)
 
@@ -149,8 +150,8 @@ def show_status():
 
     # GPU status
     print("\n[GPU Acceleration]")
-    cuda_available, cuda_info = check_cuda()
-    print_status("CUDA/GPU", cuda_available, cuda_info)
+    gpu_available, gpu_info = check_cuda()
+    print_status("GPU (CUDA/MPS)", gpu_available, gpu_info)
 
     # Model checkpoints
     print("\n[Model Checkpoints]")
@@ -160,7 +161,7 @@ def show_status():
     # Installation status
     print_header("Summary")
 
-    if vda_installed and cuda_available and checkpoints_found:
+    if vda_installed and gpu_available and checkpoints_found:
         print("\n\033[92m[OK] All systems ready!\033[0m")
         print("\nYou can now run:")
         print("  uv run da3d webcam3d")
@@ -174,7 +175,7 @@ def show_status():
             print("\n• Download model checkpoints:")
             print("  mkdir -p checkpoints && cd checkpoints")
             print("  curl -L -O https://huggingface.co/depth-anything/Video-Depth-Anything-Small/resolve/main/video_depth_anything_vits.pth")
-        if not cuda_available:
+        if not gpu_available:
             print("\n• GPU acceleration disabled (CPU mode will be slow)")
             print("  See GPU_SETUP.md for installation instructions")
 

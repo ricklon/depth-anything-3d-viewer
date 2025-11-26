@@ -1,17 +1,18 @@
 
 import numpy as np
-import matplotlib.pyplot as plt
-from da3d.viewing.mesh import DepthMeshViewer
 import cv2
 import os
 from pathlib import Path
 import sys
-import os
+import open3d as o3d
+import matplotlib.pyplot as plt
 
 # Add project root to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
 sys.path.append(project_root)
+
+from da3d.viewing.mesh import DepthMeshViewer
 
 def load_test_data(output_dir='./test_outputs'):
     image_path = Path(output_dir) / 'captured_frame.png'
@@ -28,57 +29,80 @@ def load_test_data(output_dir='./test_outputs'):
     
     return image, depth
 
-def plot_mesh(mesh, title, output_filename):
-    vertices = np.asarray(mesh.vertices)
+def capture_view(vis, view_name):
+    """Capture a specific view from the visualizer."""
+    ctr = vis.get_view_control()
     
-    # Downsample for plotting speed if needed (increased limit for better quality)
-    max_points = 50000  # Increased from 10000
-    if len(vertices) > max_points:
-        indices = np.random.choice(len(vertices), max_points, replace=False)
-        vertices = vertices[indices]
+    if view_name == "Top":
+        # Top View (X-Z plane) - Looking down Y axis
+        ctr.set_front([0, -1, 0])
+        ctr.set_lookat([0, 0, 0])
+        ctr.set_up([0, 0, -1])
+        ctr.set_zoom(0.7)
+    elif view_name == "Side":
+        # Side View (Y-Z plane) - Looking down X axis
+        ctr.set_front([-1, 0, 0])
+        ctr.set_lookat([0, 0, 0])
+        ctr.set_up([0, 1, 0])
+        ctr.set_zoom(0.7)
+    elif view_name == "Front":
+        # Front View (X-Y plane) - Looking down -Z axis
+        ctr.set_front([0, 0, -1])
+        ctr.set_lookat([0, 0, 0])
+        ctr.set_up([0, 1, 0])
+        ctr.set_zoom(0.7)
         
-    fig = plt.figure(figsize=(15, 5))
-    fig.suptitle(title, fontsize=16)
+    # Let the renderer update
+    for _ in range(5):
+        vis.poll_events()
+        vis.update_renderer()
+        
+    # Capture image
+    image = vis.capture_screen_float_buffer(do_render=True)
+    image = np.asarray(image)
+    image = (image * 255).astype(np.uint8)
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     
-    # Top View (X-Z plane) - Looking down from above
-    ax1 = fig.add_subplot(131, projection='3d')
-    ax1.scatter(vertices[:, 0], vertices[:, 2], vertices[:, 1], s=0.5, c=vertices[:, 2], cmap='viridis', alpha=0.8)
-    ax1.set_title("Top View (X-Z)")
-    ax1.set_xlabel("X (m)")
-    ax1.set_ylabel("Z (m)")
-    ax1.set_zlabel("Y (m)")
-    ax1.view_init(elev=90, azim=-90)
-    # Set equal aspect ratio for proper metric visualization
-    ax1.set_box_aspect([1, 1, 0.5])
+    # Add label
+    cv2.putText(image, f"{view_name} View", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
     
-    # Side View (Y-Z plane) - Looking from the side
-    ax2 = fig.add_subplot(132, projection='3d')
-    ax2.scatter(vertices[:, 0], vertices[:, 2], vertices[:, 1], s=0.5, c=vertices[:, 2], cmap='viridis', alpha=0.8)
-    ax2.set_title("Side View (Y-Z)")
-    ax2.set_xlabel("X (m)")
-    ax2.set_ylabel("Z (m)")
-    ax2.set_zlabel("Y (m)")
-    ax2.view_init(elev=0, azim=0)
-    ax2.set_box_aspect([1, 1, 0.5])
+    return image
+
+def plot_mesh_open3d(mesh, title, output_filename):
+    """Render mesh using Open3D for high quality output."""
+    print(f"Rendering {title} with Open3D...")
     
-    # Front View (X-Y plane) - Looking at the scene from camera position
-    ax3 = fig.add_subplot(133, projection='3d')
-    ax3.scatter(vertices[:, 0], vertices[:, 2], vertices[:, 1], s=0.5, c=vertices[:, 2], cmap='viridis', alpha=0.8)
-    ax3.set_title("Front View (X-Y)")
-    ax3.set_xlabel("X (m)")
-    ax3.set_ylabel("Z (m)")
-    ax3.set_zlabel("Y (m)")
-    ax3.view_init(elev=0, azim=-90)
-    ax3.set_box_aspect([1, 1, 0.5])
+    # Initialize visualizer (offscreen if possible, but standard works on Windows)
+    vis = o3d.visualization.Visualizer()
+    vis.create_window(width=800, height=600, visible=False)
     
-    # Remove grid lines for cleaner visualization
-    ax1.grid(False)
-    ax2.grid(False)
-    ax3.grid(False)
+    # Add geometry
+    vis.add_geometry(mesh)
     
-    plt.tight_layout()
-    plt.savefig(output_filename, dpi=150)  # Increase DPI for better quality
-    plt.close(fig)
+    # Set background to light gray for better visibility
+    opt = vis.get_render_option()
+    opt.background_color = np.asarray([0.9, 0.9, 0.9])
+    opt.point_size = 2.0
+    
+    # Capture views
+    img_top = capture_view(vis, "Top")
+    img_side = capture_view(vis, "Side")
+    img_front = capture_view(vis, "Front")
+    
+    vis.destroy_window()
+    
+    # Combine images horizontally
+    combined = np.hstack([img_top, img_side, img_front])
+    
+    # Add title
+    # Add a white bar at the top for the title
+    h, w, c = combined.shape
+    title_bar = np.ones((60, w, c), dtype=np.uint8) * 255
+    cv2.putText(title_bar, title, (w//2 - 200, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 0), 2)
+    
+    final_image = np.vstack([title_bar, combined])
+    
+    cv2.imwrite(output_filename, final_image)
     print(f"Saved {output_filename}")
 
 def main():
@@ -103,38 +127,42 @@ def main():
                 "use_metric_depth": True,
                 "focal_length_x": 470.4,
                 "focal_length_y": 470.4,
-                "metric_depth_scale": 1.0
+                "metric_depth_scale": 1.0,
+                "display_mode": "pointcloud" # Use pointcloud for crisper visualization
             },
-            "invert_depth": False # Model outputs disparity (1/depth), so we want False to convert it to depth
+            "invert_depth": False
         },
         {
             "name": "Relative Mode (Default)",
             "filename": "comparison_relative.png",
             "params": {
                 "use_metric_depth": False,
-                "depth_scale": 0.5
+                "depth_scale": 0.5,
+                "display_mode": "pointcloud"
             },
             "invert_depth": False
         },
         {
-            "name": "Metric Mode (High FOV / Low Focal Length)",
+            "name": "Metric Mode (High FOV)",
             "filename": "comparison_metric_high_fov.png",
             "params": {
                 "use_metric_depth": True,
                 "focal_length_x": 200.0,
                 "focal_length_y": 200.0,
-                "metric_depth_scale": 1.0
+                "metric_depth_scale": 1.0,
+                "display_mode": "pointcloud"
             },
             "invert_depth": False
         },
         {
-            "name": "Metric Mode (Low FOV / High Focal Length)",
+            "name": "Metric Mode (Low FOV)",
             "filename": "comparison_metric_low_fov.png",
             "params": {
                 "use_metric_depth": True,
                 "focal_length_x": 1000.0,
                 "focal_length_y": 1000.0,
-                "metric_depth_scale": 1.0
+                "metric_depth_scale": 1.0,
+                "display_mode": "pointcloud"
             },
             "invert_depth": False
         },
@@ -145,9 +173,10 @@ def main():
                 "use_metric_depth": True,
                 "focal_length_x": 470.4,
                 "focal_length_y": 470.4,
-                "metric_depth_scale": 1.0
+                "metric_depth_scale": 1.0,
+                "display_mode": "pointcloud"
             },
-            "invert_depth": True # This treats disparity as distance (Wrong)
+            "invert_depth": True
         }
     ]
 
@@ -162,7 +191,7 @@ def main():
                 invert_depth=mode['invert_depth'],
                 smooth_mesh=False
             )
-            plot_mesh(mesh, mode['name'], str(Path(args.output_dir) / mode['filename']))
+            plot_mesh_open3d(mesh, mode['name'], str(Path(args.output_dir) / mode['filename']))
         except Exception as e:
             print(f"Error processing {mode['name']}: {e}")
             import traceback

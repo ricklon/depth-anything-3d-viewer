@@ -2,8 +2,8 @@ import os
 import sys
 from pathlib import Path
 import argparse
+import time
 
-# Add project root to path to ensure we can import da3d
 # Add project root to path to ensure we can import da3d
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
@@ -18,7 +18,7 @@ except ImportError as e:
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate generated 3D visualizations using a Vision Agent.")
-    parser.add_argument("--output-dir", type=str, default="./", help="Directory containing generated images")
+    parser.add_argument("--output-dir", type=str, default="./test_outputs", help="Directory containing generated images")
     args = parser.parse_args()
 
     try:
@@ -35,25 +35,24 @@ def main():
     evaluations = [
         {
             "filename": "comparison_metric.png",
-            "prompt": "This image shows three views (Top, Side, Front) of a 3D mesh created from a depth map. \
-                       1. Does the geometry look coherent? \
+            "prompt": "This image shows three views (Top, Side, Front) of a 3D point cloud created from a depth map. \
+                       1. Does the geometry look coherent and represent a 3D scene? \
                        2. Are there any obvious flying pixels or noise artifacts? \
-                       3. Does the 'Side View' show a reasonable depth profile for a typical scene? \
+                       3. Does the 'Side View' show a reasonable depth profile? \
                        Provide a brief assessment."
+        },
+        {
+            "filename": "comparison_relative.png",
+            "prompt": "This image shows a 'Relative Mode' visualization. \
+                       Compare the depth scaling to a typical 3D scene. \
+                       Does it look flattened or distorted compared to what you expect?"
         },
         {
             "filename": "comparison_metric_inverted.png",
             "prompt": "This image shows a 3D mesh where the depth might be inverted. \
-                       Does the geometry look 'inside out' or incorrect compared to a normal 3D scene? \
                        Look at the 'Top View' and 'Side View'. \
+                       Does the geometry look 'inside out' (e.g. background closer than foreground)? \
                        Confirm if it looks distorted or inverted."
-        },
-        {
-            "filename": "tuned_visualization.png",
-            "prompt": "This is a point cloud visualization of a scene. \
-                       Does the structure look like a recognizable 3D scene? \
-                       Are the colors consistent with a natural image? \
-                       Rate the visual quality from 1 to 10."
         }
     ]
 
@@ -68,12 +67,16 @@ def main():
             continue
 
         print(f"--- Evaluating {item['filename']} ---")
-        print(f"Prompt: {item['prompt']}")
         
-        result = agent.evaluate_image(str(image_path), item["prompt"])
+        try:
+            result = agent.evaluate_image(str(image_path), item["prompt"])
+            print(f"\nAgent Assessment:\n{result}\n")
+        except Exception as e:
+            print(f"\nError evaluating {item['filename']}: {e}\n")
         
-        print(f"\nAgent Assessment:\n{result}\n")
         print("-" * 50 + "\n")
+        # Wait a bit to avoid rate limits
+        time.sleep(2)
 
 if __name__ == "__main__":
     main()

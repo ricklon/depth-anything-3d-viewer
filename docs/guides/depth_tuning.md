@@ -38,34 +38,34 @@ This creates a more uniform depth distribution focused on the main scene.
 **Static Viewer (view3d):**
 ```bash
 # Reduce extremes with 5-95% range (recommended)
-uv run vda view3d image.jpg depth.png --depth-min-percentile 5 --depth-max-percentile 95
+da3d view3d image.jpg depth.png --depth-min-percentile 5 --depth-max-percentile 95
 
 # More aggressive clamping (10-90%)
-uv run vda view3d image.jpg depth.png --depth-min-percentile 10 --depth-max-percentile 90
+da3d view3d image.jpg depth.png --depth-min-percentile 10 --depth-max-percentile 90
 
 # Focus on close objects (0-80%)
-uv run vda view3d image.jpg depth.png --depth-max-percentile 80
+da3d view3d image.jpg depth.png --depth-max-percentile 80
 ```
 
 **Real-Time Webcam:**
 ```bash
 # Default: 0-95% range (preserves close subjects!)
-uv run vda webcam3d
+da3d webcam3d
 
 # More aggressive for cluttered scenes
-uv run vda webcam3d --depth-min-percentile 10 --depth-max-percentile 90
+da3d webcam3d --depth-min-percentile 10 --depth-max-percentile 90
 
 # Full range (no clamping)
-uv run vda webcam3d --depth-min-percentile 0 --depth-max-percentile 100
+da3d webcam3d --depth-min-percentile 0 --depth-max-percentile 100
 ```
 
 **Real-Time Screen:**
 ```bash
 # Default: 5-95% range
-uv run vda screen3d-viewer
+da3d screen3d-viewer
 
 # Tune for specific content
-uv run vda screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 85
+da3d screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 85
 ```
 
 ## Performance Optimization
@@ -74,13 +74,13 @@ For better real-time performance, combine depth clamping with these settings:
 
 ```bash
 # Fast performance with lower resolution
-uv run vda webcam3d --subsample 4 --max-res 320
+da3d webcam3d --subsample 4 --max-res 320
 
 # Balanced performance (default)
-uv run vda webcam3d --subsample 3 --max-res 480
+da3d webcam3d --subsample 3 --max-res 480
 
 # Maximum quality (slower)
-uv run vda webcam3d --subsample 2 --max-res 640
+da3d webcam3d --subsample 2 --max-res 640
 ```
 
 ## Recommended Settings by Scenario
@@ -89,13 +89,13 @@ uv run vda webcam3d --subsample 2 --max-res 640
 
 ```bash
 # Balanced (default)
-uv run vda webcam3d --depth-min-percentile 0 --depth-max-percentile 95
+da3d webcam3d --depth-min-percentile 0 --depth-max-percentile 95
 
 # High quality
-uv run vda webcam3d --depth-min-percentile 10 --depth-max-percentile 90 --subsample 2
+da3d webcam3d --depth-min-percentile 10 --depth-max-percentile 90 --subsample 2
 
 # Fast performance
-uv run vda webcam3d --subsample 4 --max-res 320
+da3d webcam3d --subsample 4 --max-res 320
 ```
 
 **Why:** Close-range scenes need 0% minimum to preserve close subjects (faces, hands), while 95% maximum reduces background clutter.
@@ -104,10 +104,10 @@ uv run vda webcam3d --subsample 4 --max-res 320
 
 ```bash
 # Reduce background clutter
-uv run vda screen3d-viewer --depth-min-percentile 5 --depth-max-percentile 85
+da3d screen3d-viewer --depth-min-percentile 5 --depth-max-percentile 85
 
 # Focus on foreground objects
-uv run vda screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 80
+da3d screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 80
 ```
 
 **Why:** Indoor scenes often have cluttered backgrounds that create noise in depth estimation.
@@ -116,10 +116,10 @@ uv run vda screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 80
 
 ```bash
 # Keep more depth range for distant objects
-uv run vda screen3d-viewer --depth-min-percentile 2 --depth-max-percentile 98
+da3d screen3d-viewer --depth-min-percentile 2 --depth-max-percentile 98
 
 # Or use full range
-uv run vda screen3d-viewer --depth-min-percentile 0 --depth-max-percentile 100
+da3d screen3d-viewer --depth-min-percentile 0 --depth-max-percentile 100
 ```
 
 **Why:** Outdoor scenes have more meaningful depth variation across the full range.
@@ -128,10 +128,10 @@ uv run vda screen3d-viewer --depth-min-percentile 0 --depth-max-percentile 100
 
 ```bash
 # Aggressive clamping for stylized graphics
-uv run vda screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 90
+da3d screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 90
 
 # Fast performance
-uv run vda screen3d-viewer --subsample 4 --depth-min-percentile 10 --depth-max-percentile 90
+da3d screen3d-viewer --subsample 4 --depth-min-percentile 10 --depth-max-percentile 90
 ```
 
 **Why:** Game graphics can have extreme depth jumps (skybox, fog) that don't represent real geometry.
@@ -218,7 +218,7 @@ Result: Balanced depth, focused on main subject
 
 ### Maximum Quality (Slow)
 ```bash
-uv run vda view3d image.jpg depth.png \
+da3d view3d image.jpg depth.png \
   --subsample 1 \
   --depth-min-percentile 5 \
   --depth-max-percentile 95 \
@@ -227,7 +227,7 @@ uv run vda view3d image.jpg depth.png \
 
 ### Maximum Performance (Fast)
 ```bash
-uv run vda webcam3d \
+da3d webcam3d \
   --subsample 4 \
   --max-res 320 \
   --depth-min-percentile 10 \
@@ -236,7 +236,7 @@ uv run vda webcam3d \
 
 ### Balanced (Recommended)
 ```bash
-uv run vda webcam3d \
+da3d webcam3d \
   --subsample 3 \
   --max-res 480 \
   --depth-min-percentile 0 \
@@ -247,7 +247,7 @@ uv run vda webcam3d \
 ### Analysis Mode with Wireframe
 ```bash
 # Focus on depth structure
-uv run vda view3d image.jpg depth.png \
+da3d view3d image.jpg depth.png \
   --wireframe \
   --depth-min-percentile 10 \
   --depth-max-percentile 90

@@ -24,7 +24,13 @@ import cv2
 class DepthProjector:
     """Projects 2D images into 3D space using depth maps for parallax effects."""
 
-    def __init__(self, width, height, focal_length=500, enable_lighting=True):
+    def __init__(
+        self,
+        width: int,
+        height: int,
+        focal_length: float = 500,
+        enable_lighting: bool = True
+    ) -> None:
         """
         Initialize the depth projector.
 
@@ -53,7 +59,17 @@ class DepthProjector:
         self.last_displacement_x = None
         self.last_displacement_y = None
 
-    def project_with_parallax(self, image, depth, rotation_x=0, rotation_y=0, scale_z=1.0, lighting_intensity=0.4, zoom=1.0, invert_depth=False):
+    def project_with_parallax(
+        self,
+        image: np.ndarray,
+        depth: np.ndarray,
+        rotation_x: float = 0,
+        rotation_y: float = 0,
+        scale_z: float = 1.0,
+        lighting_intensity: float = 0.4,
+        zoom: float = 1.0,
+        invert_depth: bool = False
+    ) -> np.ndarray:
         """
         Project image with depth into 3D and apply parallax effect.
 
@@ -142,7 +158,12 @@ class DepthProjector:
 
         return output
 
-    def _remap_image(self, image, x_coords, y_coords):
+    def _remap_image(
+        self,
+        image: np.ndarray,
+        x_coords: np.ndarray,
+        y_coords: np.ndarray
+    ) -> np.ndarray:
         """
         Remap image using coordinate transformation with interpolation.
 
@@ -175,7 +196,11 @@ class DepthProjector:
 
         return output
 
-    def get_displacement_visualization(self, grayscale=False, show_arrows=True):
+    def get_displacement_visualization(
+        self,
+        grayscale: bool = False,
+        show_arrows: bool = True
+    ) -> np.ndarray:
         """
         Create a visualization of pixel displacement.
 
@@ -230,7 +255,14 @@ class DepthProjector:
 
         return displacement_vis
 
-    def _apply_lighting(self, image, depth, rotation_x, rotation_y, intensity):
+    def _apply_lighting(
+        self,
+        image: np.ndarray,
+        depth: np.ndarray,
+        rotation_x: float,
+        rotation_y: float,
+        intensity: float
+    ) -> np.ndarray:
         """
         Apply simulated 3D lighting based on depth surface normals.
 
@@ -287,7 +319,12 @@ class DepthProjector:
 
         return lit_image
 
-    def create_anaglyph(self, image, depth, eye_separation=0.05):
+    def create_anaglyph(
+        self,
+        image: np.ndarray,
+        depth: np.ndarray,
+        eye_separation: float = 0.05
+    ) -> np.ndarray:
         """
         Create red-cyan anaglyph 3D image.
 
@@ -315,7 +352,7 @@ class DepthProjector:
 class InteractiveParallaxController:
     """Controls interactive parallax effect with mouse/keyboard."""
 
-    def __init__(self, auto_rotate=False, auto_speed=0.5):
+    def __init__(self, auto_rotate: bool = False, auto_speed: float = 0.5) -> None:
         """
         Initialize the controller.
 
@@ -338,7 +375,7 @@ class InteractiveParallaxController:
         self.mouse_y = 0.5
         self.max_rotation = 25.0  # Maximum rotation in degrees (increased from 15)
 
-    def update_from_mouse(self, x, y, width, height):
+    def update_from_mouse(self, x: float, y: float, width: int, height: int) -> None:
         """Update rotation based on mouse position."""
         self.mouse_x = x / width
         self.mouse_y = y / height
@@ -347,14 +384,14 @@ class InteractiveParallaxController:
         self.rotation_y = (self.mouse_x - 0.5) * 2 * self.max_rotation
         self.rotation_x = (self.mouse_y - 0.5) * 2 * self.max_rotation
 
-    def update_auto_rotate(self, dt=0.016):
+    def update_auto_rotate(self, dt: float = 0.016) -> None:
         """Update automatic rotation (call each frame)."""
         if self.auto_rotate:
             self.auto_angle += self.auto_speed * dt * 60  # ~60 FPS normalized
             self.rotation_y = np.sin(self.auto_angle * 0.05) * self.max_rotation
             self.rotation_x = np.cos(self.auto_angle * 0.03) * self.max_rotation * 0.5
 
-    def handle_key(self, key):
+    def handle_key(self, key: int) -> bool:
         """
         Handle keyboard input for manual control.
 

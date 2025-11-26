@@ -9,8 +9,8 @@ The project has grown organically and needs refactoring to be production-ready.
 - [x] **Type Hinting & Linting:**
     - [ ] Add comprehensive type hints to all functions.
     - [x] Set up `ruff` or `pylint` for code quality checks.
-- [ ] **Configuration Management:**
-    - Move hardcoded constants (like default focal lengths, model paths) to a config file (YAML/TOML).
+- [x] **Configuration Management:**
+    - [x] Move hardcoded constants (like default focal lengths, model paths) to a config file (YAML/TOML).
 - [ ] **Documentation:**
     - Add docstrings to all classes and methods.
     - Update `README.md` with clear installation and usage instructions for the new features.

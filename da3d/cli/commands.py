@@ -33,15 +33,31 @@ from video_depth_anything.video_depth_stream import VideoDepthAnything as VideoD
 from utils.dc_utils import read_video_frames, save_video
 
 # Da3d package imports (from this package)
+# Da3d package imports (from this package)
 from da3d.projection import DepthProjector, InteractiveParallaxController
 from da3d.viewing import DepthMeshViewer, RealTime3DViewer
+from da3d.config import (
+    MODEL_CONFIGS, 
+    DEFAULT_FOCAL_LENGTH_X, 
+    DEFAULT_FOCAL_LENGTH_Y,
+    HQ_MAX_RES,
+    HQ_INPUT_SIZE,
+    HQ_SUBSAMPLE,
+    HQ_SOR_NEIGHBORS,
+    HQ_SOR_STD_RATIO,
+    DEFAULT_SOR_NEIGHBORS,
+    DEFAULT_SOR_STD_RATIO
+)
 
 
-MODEL_CONFIGS = {
-    'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
-    'vitb': {'encoder': 'vitb', 'features': 128, 'out_channels': [96, 192, 384, 768]},
-    'vitl': {'encoder': 'vitl', 'features': 256, 'out_channels': [256, 512, 1024, 1024]},
-}
+def get_device():
+    """Get the best available device (CUDA, MPS, or CPU)."""
+    if torch.cuda.is_available():
+        return 'cuda'
+    elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+        return 'mps'
+    else:
+        return 'cpu'
 
 
 def video_command(args):
@@ -49,9 +65,11 @@ def video_command(args):
     print(f"Processing video: {args.input}")
     print(f"Model: {args.encoder}, Metric: {args.metric}, Streaming: {args.streaming}")
 
-    DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+    DEVICE = get_device()
     if DEVICE == 'cpu':
-        print("Warning: CUDA not available. Running on CPU will be very slow.")
+        print("Warning: CUDA/MPS not available. Running on CPU will be very slow.")
+    elif DEVICE == 'mps':
+        print("Using Apple Metal Performance Shaders (MPS) acceleration.")
 
     checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
     checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
@@ -169,9 +187,11 @@ def webcam_command(args):
     print(f"Model: {args.encoder}, Camera: {args.camera_id}")
     print("Press 'q' to quit, 's' to save current frame, 'r' to start/stop recording")
 
-    DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+    DEVICE = get_device()
     if DEVICE == 'cpu':
-        print("Warning: CUDA not available. Webcam mode will be very slow on CPU.")
+        print("Warning: CUDA/MPS not available. Webcam mode will be very slow on CPU.")
+    elif DEVICE == 'mps':
+        print("Using Apple Metal Performance Shaders (MPS) acceleration.")
 
     checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
     checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
@@ -411,9 +431,11 @@ def screen_command(args):
     print(f"Model: {args.encoder}, Monitor: {args.monitor}, Target FPS: {args.fps}")
     print("Press 'q' to quit, 's' to save current frame, 'r' to start/stop recording")
 
-    DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+    DEVICE = get_device()
     if DEVICE == 'cpu':
-        print("Warning: CUDA not available. Screen capture mode will be very slow on CPU.")
+        print("Warning: CUDA/MPS not available. Screen capture mode will be very slow on CPU.")
+    elif DEVICE == 'mps':
+        print("Using Apple Metal Performance Shaders (MPS) acceleration.")
 
     checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
     checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
@@ -594,9 +616,11 @@ def screen3d_command(args):
     print("Starting 3D screen capture with parallax effect...")
     print(f"Model: {args.encoder}, Monitor: {args.monitor}, Target FPS: {args.fps}")
 
-    DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+    DEVICE = get_device()
     if DEVICE == 'cpu':
-        print("Warning: CUDA not available. 3D mode will be very slow on CPU.")
+        print("Warning: CUDA/MPS not available. 3D mode will be very slow on CPU.")
+    elif DEVICE == 'mps':
+        print("Using Apple Metal Performance Shaders (MPS) acceleration.")
 
     checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
     checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
@@ -1033,9 +1057,11 @@ def webcam3d_command(args):
     print("Starting real-time 3D webcam viewer...")
     print(f"Model: {args.encoder}, Camera: {args.camera_id}")
 
-    DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+    DEVICE = get_device()
     if DEVICE == 'cpu':
-        print("Warning: CUDA not available. 3D webcam mode will be very slow on CPU.")
+        print("Warning: CUDA/MPS not available. 3D webcam mode will be very slow on CPU.")
+    elif DEVICE == 'mps':
+        print("Using Apple Metal Performance Shaders (MPS) acceleration.")
 
     checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
     checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
@@ -1083,20 +1109,20 @@ def webcam3d_command(args):
     # Apply High Quality Preset if requested
     if args.high_quality:
         print("\n[INFO] High Quality Preset Enabled")
-        print("  - Resolution: 1024p")
-        print("  - Input Size: 1022 (High Detail)")
-        print("  - Subsample: 2")
+        print(f"  - Resolution: {HQ_MAX_RES}p")
+        print(f"  - Input Size: {HQ_INPUT_SIZE} (High Detail)")
+        print(f"  - Subsample: {HQ_SUBSAMPLE}")
         print("  - Metric Depth: Enabled")
-        print("  - SOR: Neighbors=100, Std Ratio=0.5")
-        args.max_res = 1024
-        args.input_size = 1022 # Multiple of 14 closest to 1024
-        args.subsample = 2
+        print(f"  - SOR: Neighbors={HQ_SOR_NEIGHBORS}, Std Ratio={HQ_SOR_STD_RATIO}")
+        args.max_res = HQ_MAX_RES
+        args.input_size = HQ_INPUT_SIZE
+        args.subsample = HQ_SUBSAMPLE
         args.metric = True
-        args.sor_neighbors = 100
-        args.sor_std_ratio = 0.5
+        args.sor_neighbors = HQ_SOR_NEIGHBORS
+        args.sor_std_ratio = HQ_SOR_STD_RATIO
         # Ensure focal lengths are set if not manually overridden
-        if args.focal_length_x == 470.4: # Default value
-             args.focal_length_x = 470.4 # Keep default or adjust if needed
+        if args.focal_length_x == DEFAULT_FOCAL_LENGTH_X:
+             args.focal_length_x = DEFAULT_FOCAL_LENGTH_X # Keep default or adjust if needed
 
     # Initialize 3D viewer
     viewer_3d = None
@@ -1171,7 +1197,6 @@ def webcam3d_command(args):
         cap.release()
         if viewer_3d:
             viewer_3d.close()
-
     print("Webcam 3D session ended.")
 
 
@@ -1179,18 +1204,19 @@ def screen3d_viewer_command(args):
     """Real-time 3D mesh viewer from screen capture."""
     try:
         import open3d as o3d
-        import mss
-    except ImportError as e:
-        print(f"Error: Required library not installed: {e}")
+    except ImportError:
+        print("Error: open3d not installed.")
         print("Install with: uv sync --extra metric")
         sys.exit(1)
 
     print("Starting real-time 3D screen viewer...")
     print(f"Model: {args.encoder}, Monitor: {args.monitor}")
 
-    DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+    DEVICE = get_device()
     if DEVICE == 'cpu':
-        print("Warning: CUDA not available. 3D screen mode will be very slow on CPU.")
+        print("Warning: CUDA/MPS not available. 3D mode will be very slow on CPU.")
+    elif DEVICE == 'mps':
+        print("Using Apple Metal Performance Shaders (MPS) acceleration.")
 
     checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
     checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
@@ -1342,40 +1368,40 @@ def demo_command(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Video Depth Anything - Consistent Video Depth Estimation',
+        description='Video Depth Anything 3D - CLI',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Process a video file
-  uv run vda video input.mp4 -o outputs/
+  da3d video input.mp4 -o outputs/
 
   # Use webcam for real-time depth
-  uv run vda webcam
+  da3d webcam
 
   # Capture screen with depth estimation
-  uv run vda screen
+  da3d screen
 
   # Capture screen with 2.5D parallax effect
-  uv run vda screen3d --auto-rotate
+  da3d screen3d --auto-rotate
 
   # Stream 3D screen to OBS Virtual Camera
-  uv run vda screen3d --virtual-cam --mouse-control
+  da3d screen3d --virtual-cam --mouse-control
 
   # Process video with metric depth
-  uv run vda video input.mp4 --metric
+  da3d video input.mp4 --metric
 
   # Launch web demo
-  uv run vda demo
+  da3d demo
 
   # View depth map in true 3D
-  uv run vda view3d image.jpg depth.png
+  da3d view3d image.jpg depth.png
 
   # Real-time 3D webcam viewer
-  uv run vda webcam3d
+  da3d webcam3d
 
   # Real-time 3D screen capture viewer
-  uv run vda screen3d-viewer
-        """
+  da3d screen3d-viewer
+"""
     )
 
     subparsers = parser.add_subparsers(dest='command', help='Command to run')

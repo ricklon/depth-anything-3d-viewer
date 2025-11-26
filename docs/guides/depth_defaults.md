@@ -22,7 +22,7 @@ Different commands have different default depth percentile settings optimized fo
 
 ```bash
 # Default webcam settings (optimized for portraits)
-uv run vda webcam3d
+da3d webcam3d
 # Uses: --depth-min-percentile 0 --depth-max-percentile 95
 ```
 
@@ -38,7 +38,7 @@ uv run vda webcam3d
 
 ```bash
 # Default screen capture settings
-uv run vda screen3d-viewer
+da3d screen3d-viewer
 # Uses: --depth-min-percentile 5 --depth-max-percentile 95
 ```
 
@@ -55,11 +55,11 @@ uv run vda screen3d-viewer
 
 ```bash
 # Default static viewer (no auto-clamping)
-uv run vda view3d image.jpg depth.png
+da3d view3d image.jpg depth.png
 # Uses: --depth-min-percentile 0 --depth-max-percentile 100
 
 # But you can specify any range:
-uv run vda view3d image.jpg depth.png --depth-min-percentile 5 --depth-max-percentile 95
+da3d view3d image.jpg depth.png --depth-min-percentile 5 --depth-max-percentile 95
 ```
 
 ## Visual Comparison
@@ -89,25 +89,25 @@ Result: Face fully visible, background reduced while preserving detail! ✓
 **Sitting far from camera (2+ meters):**
 ```bash
 # Use more clamping since you're not as close
-uv run vda webcam3d --depth-min-percentile 5 --depth-max-percentile 90
+da3d webcam3d --depth-min-percentile 5 --depth-max-percentile 90
 ```
 
 **Very close to camera (< 0.5 meters):**
 ```bash
 # Keep even more background range
-uv run vda webcam3d --depth-min-percentile 0 --depth-max-percentile 98
+da3d webcam3d --depth-min-percentile 0 --depth-max-percentile 98
 ```
 
 **Clean background (minimal clutter):**
 ```bash
 # Don't clamp background much
-uv run vda webcam3d --depth-min-percentile 0 --depth-max-percentile 98
+da3d webcam3d --depth-min-percentile 0 --depth-max-percentile 98
 ```
 
 **Cluttered background (messy room):**
 ```bash
 # Clamp more background
-uv run vda webcam3d --depth-min-percentile 0 --depth-max-percentile 85
+da3d webcam3d --depth-min-percentile 0 --depth-max-percentile 85
 ```
 
 ### Screen Capture Scenarios
@@ -115,19 +115,19 @@ uv run vda webcam3d --depth-min-percentile 0 --depth-max-percentile 85
 **Gaming (extreme depth jumps):**
 ```bash
 # More aggressive clamping
-uv run vda screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 90
+da3d screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 90
 ```
 
 **Video content (natural scenes):**
 ```bash
 # Less clamping
-uv run vda screen3d-viewer --depth-min-percentile 2 --depth-max-percentile 98
+da3d screen3d-viewer --depth-min-percentile 2 --depth-max-percentile 98
 ```
 
 **UI/Desktop (mostly flat):**
 ```bash
 # Focus on what little depth exists
-uv run vda screen3d-viewer --depth-min-percentile 5 --depth-max-percentile 80
+da3d screen3d-viewer --depth-min-percentile 5 --depth-max-percentile 80
 ```
 
 ## Quick Reference Commands
@@ -136,39 +136,39 @@ uv run vda screen3d-viewer --depth-min-percentile 5 --depth-max-percentile 80
 
 ```bash
 # Default (best for most users)
-uv run vda webcam3d
+da3d webcam3d
 
 # Far from camera
-uv run vda webcam3d --depth-min-percentile 5
+da3d webcam3d --depth-min-percentile 5
 
 # Very close to camera or clean background
-uv run vda webcam3d --depth-max-percentile 98
+da3d webcam3d --depth-max-percentile 98
 
 # Clean up messy background
-uv run vda webcam3d --depth-max-percentile 80
+da3d webcam3d --depth-max-percentile 80
 ```
 
 ### Screen Capture
 
 ```bash
 # Default (best for most content)
-uv run vda screen3d-viewer
+da3d screen3d-viewer
 
 # Gaming/stylized content
-uv run vda screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 90
+da3d screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 90
 
 # Natural video content
-uv run vda screen3d-viewer --depth-min-percentile 2 --depth-max-percentile 98
+da3d screen3d-viewer --depth-min-percentile 2 --depth-max-percentile 98
 ```
 
 ### Static Files
 
 ```bash
 # Start with no clamping, analyze the result
-uv run vda view3d image.jpg depth.png
+da3d view3d image.jpg depth.png
 
 # If extremes are a problem, add clamping
-uv run vda view3d image.jpg depth.png --depth-min-percentile 5 --depth-max-percentile 95
+da3d view3d image.jpg depth.png --depth-min-percentile 5 --depth-max-percentile 95
 ```
 
 ## Understanding the Numbers
@@ -199,31 +199,31 @@ This should now be fixed with the new defaults (0-95%)!
 If still cut off:
 ```bash
 # Increase max percentile even more
-uv run vda webcam3d --depth-max-percentile 98
+da3d webcam3d --depth-max-percentile 98
 ```
 
 ### "Too much noisy background in webcam mode"
 
 ```bash
 # Decrease max percentile more aggressively
-uv run vda webcam3d --depth-max-percentile 85
+da3d webcam3d --depth-max-percentile 85
 
 # Or even more
-uv run vda webcam3d --depth-max-percentile 80
+da3d webcam3d --depth-max-percentile 80
 ```
 
 ### "Screen content looks flat"
 
 ```bash
 # Reduce clamping to preserve more depth range
-uv run vda screen3d-viewer --depth-min-percentile 2 --depth-max-percentile 98
+da3d screen3d-viewer --depth-min-percentile 2 --depth-max-percentile 98
 ```
 
 ### "Screen content has extreme stretching"
 
 ```bash
 # Increase clamping
-uv run vda screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 85
+da3d screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 85
 ```
 
 ## Summary

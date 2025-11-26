@@ -35,26 +35,26 @@ Install [OBS Virtual Camera](https://obsproject.com/forum/resources/obs-virtualc
 
 ```bash
 # Capture primary monitor with auto-rotate
-uv run vda screen3d --auto-rotate
+da3d screen3d --auto-rotate
 
 # Capture with mouse control
-uv run vda screen3d --mouse-control
+da3d screen3d --mouse-control
 
 # Capture specific region
-uv run vda screen3d --region 0,0,1920,1080
+da3d screen3d --region 0,0,1920,1080
 ```
 
 ### Stream to OBS Virtual Camera
 
 ```bash
 # Enable virtual camera output
-uv run vda screen3d --virtual-cam --auto-rotate
+da3d screen3d --virtual-cam --auto-rotate
 
 # With mouse control for interactive parallax
-uv run vda screen3d --virtual-cam --mouse-control
+da3d screen3d --virtual-cam --mouse-control
 
 # Adjust 3D effect strength
-uv run vda screen3d --virtual-cam --depth-scale 0.5
+da3d screen3d --virtual-cam --depth-scale 0.5
 ```
 
 ## Controls
@@ -97,7 +97,7 @@ When `--mouse-control` is enabled:
 
 1. Start the screen3d command with virtual camera:
    ```bash
-   uv run vda screen3d --virtual-cam --auto-rotate
+   da3d screen3d --virtual-cam --auto-rotate
    ```
 
 2. Open OBS Studio
@@ -134,7 +134,7 @@ Capture your IDE with parallax effect:
 
 ```bash
 # Find your IDE window position (use --region)
-uv run vda screen3d --virtual-cam --region 100,100,1600,900 --auto-rotate --depth-scale 0.25
+da3d screen3d --virtual-cam --region 100,100,1600,900 --auto-rotate --depth-scale 0.25
 ```
 
 ### Gaming Stream with 3D Effect
@@ -142,7 +142,7 @@ uv run vda screen3d --virtual-cam --region 100,100,1600,900 --auto-rotate --dept
 Capture game window with mouse-controlled parallax:
 
 ```bash
-uv run vda screen3d --virtual-cam --mouse-control --max-res 1280 --fps 15
+da3d screen3d --virtual-cam --mouse-control --max-res 1280 --fps 15
 ```
 
 ### Presentation with Dynamic Camera
@@ -150,7 +150,7 @@ uv run vda screen3d --virtual-cam --mouse-control --max-res 1280 --fps 15
 Add movement to static slides:
 
 ```bash
-uv run vda screen3d --virtual-cam --auto-rotate --depth-scale 0.2 --fps 8
+da3d screen3d --virtual-cam --auto-rotate --depth-scale 0.2 --fps 8
 ```
 
 ### Screen Recording with Depth
@@ -159,7 +159,7 @@ Record your screen with 3D effect:
 
 ```bash
 # Start recording with 'r' key
-uv run vda screen3d --auto-rotate --max-res 1280
+da3d screen3d --auto-rotate --max-res 1280
 # Press 'r' to start/stop recording
 # Saved to ./screen3d_outputs/
 ```
@@ -206,10 +206,10 @@ To capture specific windows or regions, use the `--region` option:
 
 ```bash
 # Capture top-left 1920x1080 region
-uv run vda screen3d --region 0,0,1920,1080 --virtual-cam
+da3d screen3d --region 0,0,1920,1080 --virtual-cam
 
 # Capture centered 1280x720 region on 1920x1080 screen
-uv run vda screen3d --region 320,180,1280,720 --virtual-cam
+da3d screen3d --region 320,180,1280,720 --virtual-cam
 ```
 
 Use Windows' built-in Snipping Tool or similar to find exact coordinates.
