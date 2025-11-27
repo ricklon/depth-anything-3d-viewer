@@ -183,7 +183,9 @@ class DepthMeshViewer:
             # ---- Outlier removal (metric depth) ----
             # 1. Percentile clipping to remove extreme depth values
             z_vals = points[:, 2]
-            lower, upper = np.percentile(z_vals, [1, 99]) # Keep 1st-99th percentile
+            # Use configured percentiles (default 0-100 means no clipping)
+            lower = np.percentile(z_vals, self.depth_min_percentile)
+            upper = np.percentile(z_vals, self.depth_max_percentile)
             mask_valid = (z_vals >= lower) & (z_vals <= upper)
             
             # 2. Statistical Outlier Removal (SOR)
