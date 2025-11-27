@@ -322,22 +322,22 @@ projected = projector.project_with_parallax(
 **Solution:** Percentile clamping focuses on meaningful depth ranges:
 
 ```bash
---depth-min-percentile N  # Clamp near depth (0-100)
---depth-max-percentile N  # Clamp far depth (0-100)
+--depth-min-percentile N  # Clamp far depth/background (0-100)
+--depth-max-percentile N  # Clamp near depth/foreground (0-100)
 ```
 
 **Defaults:**
-- `webcam3d`: 0-90% (preserves foreground, simplifies background)
-- `screen3d-viewer`: 5-95% (balanced for screen content)
-- `view3d`: 0-100% (full control, no auto-clamping)
+- `webcam3d`: 0-100% (full range, preserves foreground)
+- `screen3d-viewer`: 5-100% (reduces background noise, preserves foreground)
+- `view3d`: 0-100% (full control)
 
 **Examples:**
 ```bash
 # More aggressive background removal
-uv run da3d webcam3d --depth-max-percentile 80
+uv run da3d webcam3d --depth-min-percentile 20
 
-# Focus on mid-range depth
-uv run da3d screen3d-viewer --depth-min-percentile 10 --depth-max-percentile 85
+# Clip foreground artifacts (if objects get too close/distorted)
+uv run da3d webcam3d --depth-max-percentile 95
 
 # Full depth range (no clamping)
 uv run da3d view3d image.jpg depth.png --depth-min-percentile 0 --depth-max-percentile 100

@@ -1555,9 +1555,9 @@ Examples:
     webcam3d_parser.add_argument('--depth-scale', type=float, default=0.5,
                                 help='Z-displacement scale (0.1-2.0, where 1.0 = depth spans half image width, default: 0.5)')
     webcam3d_parser.add_argument('--depth-min-percentile', type=float, default=0.0,
-                                help='Clamp near depth at this percentile (default: 0, preserves foreground)')
-    webcam3d_parser.add_argument('--depth-max-percentile', type=float, default=95.0,
-                                help='Clamp far depth at this percentile (default: 95, reduces background extremes while preserving detail)')
+                                help='Clamp far depth (background) at this percentile (default: 0, preserves background)')
+    webcam3d_parser.add_argument('--depth-max-percentile', type=float, default=100.0,
+                                help='Clamp near depth (foreground) at this percentile (default: 100, preserves foreground details)')
     webcam3d_parser.add_argument('--depth-threshold', type=float, default=1.0,
                                 help='Filter pixels beyond this depth percentile (0-1, default: 1.0 keeps all pixels, 0.95 removes farthest 5%%)')
     webcam3d_parser.add_argument('--raw-depth', action='store_true',
@@ -1610,9 +1610,9 @@ Examples:
     screen3d_viewer_parser.add_argument('--depth-scale', type=float, default=0.5,
                                        help='Z-displacement scale (0.1-2.0, where 1.0 = depth spans half image width, default: 0.5)')
     screen3d_viewer_parser.add_argument('--depth-min-percentile', type=float, default=5.0,
-                                       help='Clamp near depth at this percentile (default: 5, reduces extremes)')
-    screen3d_viewer_parser.add_argument('--depth-max-percentile', type=float, default=95.0,
-                                       help='Clamp far depth at this percentile (default: 95, reduces extremes)')
+                                       help='Clamp far depth (background) at this percentile (default: 5, reduces background noise)')
+    screen3d_viewer_parser.add_argument('--depth-max-percentile', type=float, default=100.0,
+                                       help='Clamp near depth (foreground) at this percentile (default: 100, preserves foreground details)')
     screen3d_viewer_parser.add_argument('--depth-threshold', type=float, default=1.0,
                                        help='Filter pixels beyond this depth percentile (0-1, default: 1.0 keeps all pixels, 0.95 removes farthest 5%%)')
     screen3d_viewer_parser.add_argument('--raw-depth', action='store_true',
