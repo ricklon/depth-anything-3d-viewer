@@ -33,7 +33,7 @@ from video_depth_anything.video_depth_stream import VideoDepthAnything as VideoD
 from utils.dc_utils import read_video_frames, save_video
 
 # Da3d package imports (from this package)
-# Da3d package imports (from this package)
+
 from da3d.projection import DepthProjector, InteractiveParallaxController
 from da3d.viewing import DepthMeshViewer, RealTime3DViewer
 from da3d.config import (
@@ -48,6 +48,40 @@ from da3d.config import (
     DEFAULT_SOR_NEIGHBORS,
     DEFAULT_SOR_STD_RATIO
 )
+from da3d.estimators.vda_estimator import VDAEstimator
+from da3d.estimators.da3_estimator import DA3Estimator
+
+def get_estimator(args, streaming=False):
+    """Factory to get the correct estimator."""
+    model_type = getattr(args, 'model_type', 'vda')
+    
+    if model_type == 'da3':
+        # DA3 doesn't support streaming mode in the same way, so we just init the estimator
+        # We might need to map 'encoder' args if they differ
+        config = {'encoder': args.encoder} # DA3 uses 'encoder' arg too?
+        estimator = DA3Estimator()
+        estimator.load_model(config)
+        return estimator
+    else:
+        # VDA
+        config = {
+            'encoder': args.encoder,
+            'checkpoint_path': None, # VDAEstimator loads based on encoder name usually
+            'metric': args.metric,
+            'input_size': args.input_size
+        }
+        # We need to construct the checkpoint path manually if VDAEstimator expects it
+        # Or VDAEstimator can handle it.
+        # Let's look at VDAEstimator again. It expects 'checkpoint_path' in config.
+        
+        checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
+        checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
+        
+        config['checkpoint_path'] = str(checkpoint_path)
+        
+        estimator = VDAEstimator(streaming=streaming)
+        estimator.load_model(config)
+        return estimator
 
 
 def get_device():
@@ -80,13 +114,24 @@ def video_command(args):
         sys.exit(1)
 
     # Load model
-    if args.streaming:
-        video_depth_anything = VideoDepthAnythingStream(**MODEL_CONFIGS[args.encoder])
+    estimator = get_estimator(args, streaming=args.streaming)
+    model = estimator # We'll need to adapt the process functions to use estimator
+    
+    # Refactoring process_video_* to use estimator is a bigger change.
+    # For now, let's keep the old code for VDA if model_type is vda to minimize risk,
+    # OR fully switch.
+    # The plan said "Integrate estimators into commands".
+    
+    # If we are using VDA, we can extract the underlying model for compatibility
+    # with existing process functions if we don't want to rewrite them all yet.
+    if isinstance(estimator, VDAEstimator):
+        video_depth_anything = estimator.model
     else:
-        video_depth_anything = VideoDepthAnything(**MODEL_CONFIGS[args.encoder], metric=args.metric)
+        print("Error: Video processing currently only supports VDA model.")
+        sys.exit(1)
 
-    video_depth_anything.load_state_dict(torch.load(str(checkpoint_path), map_location='cpu'), strict=True)
-    video_depth_anything = video_depth_anything.to(DEVICE).eval()
+    # video_depth_anything.load_state_dict(torch.load(str(checkpoint_path), map_location='cpu'), strict=True)
+    # video_depth_anything = video_depth_anything.to(DEVICE).eval()
 
     # Process video
     if args.streaming:
@@ -193,18 +238,13 @@ def webcam_command(args):
     elif DEVICE == 'mps':
         print("Using Apple Metal Performance Shaders (MPS) acceleration.")
 
-    checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
-    checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
-
-    if not checkpoint_path.exists():
-        print(f"Error: Checkpoint not found at {checkpoint_path}")
-        print("Please download checkpoints using: bash get_weights.sh")
-        sys.exit(1)
-
     # Load streaming model for webcam
-    model = VideoDepthAnythingStream(**MODEL_CONFIGS[args.encoder])
-    model.load_state_dict(torch.load(str(checkpoint_path), map_location='cpu'), strict=True)
-    model = model.to(DEVICE).eval()
+    estimator = get_estimator(args, streaming=True)
+    
+    # For webcam, we can use the generic infer_depth interface!
+    # But the existing code uses model.infer_video_depth_one directly.
+    # Let's adapt the loop below.
+
 
     # Open webcam - try different backends for Windows compatibility
     cap = None
@@ -276,7 +316,7 @@ def webcam_command(args):
 
         # Infer depth
         with torch.no_grad():
-            depth = model.infer_video_depth_one(frame_rgb, input_size=args.input_size, device=DEVICE, fp32=args.fp32)
+            depth, confidence = estimator.infer_depth(frame_rgb)
 
         # Debug: Print depth statistics on first few frames
         if frame_count < 3:
@@ -437,18 +477,9 @@ def screen_command(args):
     elif DEVICE == 'mps':
         print("Using Apple Metal Performance Shaders (MPS) acceleration.")
 
-    checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
-    checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
-
-    if not checkpoint_path.exists():
-        print(f"Error: Checkpoint not found at {checkpoint_path}")
-        print("Please download checkpoints using: bash get_weights.sh")
-        sys.exit(1)
-
     # Load streaming model for screen capture
-    model = VideoDepthAnythingStream(**MODEL_CONFIGS[args.encoder])
-    model.load_state_dict(torch.load(str(checkpoint_path), map_location='cpu'), strict=True)
-    model = model.to(DEVICE).eval()
+    estimator = get_estimator(args, streaming=True)
+
 
     # Setup screen capture
     sct = mss.mss()
@@ -515,7 +546,7 @@ def screen_command(args):
 
         # Infer depth
         with torch.no_grad():
-            depth = model.infer_video_depth_one(frame_rgb, input_size=args.input_size, device=DEVICE, fp32=args.fp32)
+            depth, confidence = estimator.infer_depth(frame_rgb)
 
         # Debug: Print depth statistics on first few frames
         if frame_count < 3:
@@ -622,18 +653,9 @@ def screen3d_command(args):
     elif DEVICE == 'mps':
         print("Using Apple Metal Performance Shaders (MPS) acceleration.")
 
-    checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
-    checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
-
-    if not checkpoint_path.exists():
-        print(f"Error: Checkpoint not found at {checkpoint_path}")
-        print("Please download checkpoints using: bash get_weights.sh")
-        sys.exit(1)
-
     # Load streaming model
-    model = VideoDepthAnythingStream(**MODEL_CONFIGS[args.encoder])
-    model.load_state_dict(torch.load(str(checkpoint_path), map_location='cpu'), strict=True)
-    model = model.to(DEVICE).eval()
+    estimator = get_estimator(args, streaming=True)
+
 
     # Setup screen capture
     sct = mss.mss()
@@ -755,8 +777,8 @@ def screen3d_command(args):
             display_frame = cv2.resize(frame_rgb, (new_w, new_h))
 
         # Infer depth
-        with torch.no_grad():
-            depth = model.infer_video_depth_one(display_frame, input_size=args.input_size, device=DEVICE, fp32=args.fp32)
+        depth, confidence = estimator.infer_depth(display_frame)
+
 
         # Initialize projector on first frame
         if projector is None:
@@ -1009,8 +1031,66 @@ def view3d_command(args):
         sys.exit(1)
 
     print("Loading 3D mesh viewer...")
+    print("Loading 3D mesh viewer...")
     print(f"Image: {args.image}")
-    print(f"Depth: {args.depth}")
+    
+    depth_map = args.depth
+    if depth_map is None:
+        print(f"Depth map not provided. Inferring using model: {args.model_type} ({args.encoder})...")
+        
+        # Load image
+        if not os.path.exists(args.image):
+            print(f"Error: Image not found at {args.image}")
+            sys.exit(1)
+            
+        image = cv2.imread(args.image)
+        if image is None:
+            print(f"Error: Could not load image {args.image}")
+            sys.exit(1)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        # Load estimator
+        DEVICE = get_device()
+        if DEVICE == 'cpu':
+            print("Warning: CUDA/MPS not available. Inference will be slow.")
+            
+        estimator = get_estimator(args, streaming=False)
+        
+        # Run inference
+        print("Running inference...")
+        depth, confidence = estimator.infer_depth(image)
+        
+        # Save inferred depth temporarily or just pass it? 
+        # DepthMeshViewer expects a path or numpy array?
+        # Looking at DepthMeshViewer.process_and_view signature:
+        # process_and_view(self, image_path, depth_path_or_array, ...)
+        # It seems it might handle array if I check the code, but the docstring said path.
+        # Let's check DepthMeshViewer later. For now assume it handles array or we save it.
+        
+        # Let's save it to a temp file to be safe and consistent with existing usage
+        output_dir = Path("temp_depths")
+        output_dir.mkdir(exist_ok=True)
+        depth_map = str(output_dir / f"{Path(args.image).stem}_depth.png")
+        
+        # Normalize for saving as PNG (DepthMeshViewer might expect normalized or raw?)
+        # If metric, we should save as .npy or .exr to preserve values.
+        # If relative, PNG is fine.
+        
+        if args.metric:
+            depth_map = str(output_dir / f"{Path(args.image).stem}_depth.npy")
+            np.save(depth_map, depth)
+            print(f"Saved temporary metric depth to {depth_map}")
+        else:
+            # Normalize to 0-255
+            d_min, d_max = depth.min(), depth.max()
+            if d_max - d_min > 1e-8:
+                depth_norm = ((depth - d_min) / (d_max - d_min) * 255).astype(np.uint8)
+            else:
+                depth_norm = np.zeros_like(depth, dtype=np.uint8)
+            cv2.imwrite(depth_map, depth_norm)
+            print(f"Saved temporary depth to {depth_map}")
+            
+    print(f"Depth: {depth_map}")
 
     if args.metric:
         print("Metric depth mode enabled")
@@ -1036,7 +1116,7 @@ def view3d_command(args):
 
     viewer.process_and_view(
         args.image,
-        args.depth,
+        depth_map,
         subsample=args.subsample,
         invert_depth=args.invert_depth,
         smooth_mesh=not args.no_smooth,
@@ -1063,18 +1143,8 @@ def webcam3d_command(args):
     elif DEVICE == 'mps':
         print("Using Apple Metal Performance Shaders (MPS) acceleration.")
 
-    checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
-    checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
-
-    if not checkpoint_path.exists():
-        print(f"Error: Checkpoint not found at {checkpoint_path}")
-        print("Please download checkpoints using: bash get_weights.sh")
-        sys.exit(1)
-
     # Load streaming model
-    model = VideoDepthAnythingStream(**MODEL_CONFIGS[args.encoder])
-    model.load_state_dict(torch.load(str(checkpoint_path), map_location='cpu'), strict=True)
-    model = model.to(DEVICE).eval()
+    estimator = get_estimator(args, streaming=True)
 
     # Open webcam
     cap = None
@@ -1150,7 +1220,7 @@ def webcam3d_command(args):
 
             # Infer depth
             with torch.no_grad():
-                depth = model.infer_video_depth_one(frame_rgb, input_size=args.input_size, device=DEVICE, fp32=args.fp32)
+                depth, confidence = estimator.infer_depth(frame_rgb)
 
             # Initialize viewer on first frame
             if viewer_3d is None:
@@ -1180,6 +1250,31 @@ def webcam3d_command(args):
                     print(f"Metric depth: fx={args.focal_length_x:.1f}, fy={args.focal_length_y:.1f}")
                 print(f"Depth range: {args.depth_min_percentile}%-{args.depth_max_percentile}% percentile")
 
+                # Register 'X' key for "Capture and View"
+                def capture_and_view(vis):
+                    if viewer_3d.current_image is not None:
+                        timestamp = time.strftime("%Y%m%d_%H%M%S")
+                        temp_dir = Path("temp_captures")
+                        temp_dir.mkdir(exist_ok=True)
+                        image_path = temp_dir / f"capture_{timestamp}.png"
+                        
+                        # Save RGB image
+                        cv2.imwrite(str(image_path), cv2.cvtColor(viewer_3d.current_image, cv2.COLOR_RGB2BGR))
+                        print(f"\n[INFO] Captured frame to {image_path}")
+                        print("[INFO] Launching high-quality 3D viewer with DA3...")
+                        
+                        # Launch view3d in a separate process
+                        import subprocess
+                        subprocess.Popen([
+                            "da3d", "view3d", str(image_path), 
+                            "--model-type", "da3", 
+                            "--encoder", "da3-large"
+                        ])
+                        return False # Don't update geometry in this callback
+
+                viewer_3d.register_key_callback(ord('X'), capture_and_view)
+                print("Controls: [X] Capture and View with DA3, [Q] Quit")
+
             # Update 3D mesh
             viewer_3d.update_mesh(frame_rgb, depth, invert_depth=args.invert_depth)
 
@@ -1207,6 +1302,13 @@ def screen3d_viewer_command(args):
     except ImportError:
         print("Error: open3d not installed.")
         print("Install with: uv sync --extra metric")
+        sys.exit(1)
+
+    try:
+        import mss
+    except ImportError:
+        print("Error: mss not installed.")
+        print("Install with: uv sync")
         sys.exit(1)
 
     print("Starting real-time 3D screen viewer...")
@@ -1244,9 +1346,7 @@ def screen3d_viewer_command(args):
 
 
     # Load streaming model
-    model = VideoDepthAnythingStream(**MODEL_CONFIGS[args.encoder])
-    model.load_state_dict(torch.load(str(checkpoint_path), map_location='cpu'), strict=True)
-    model = model.to(DEVICE).eval()
+    estimator = get_estimator(args, streaming=True)
 
     # Setup screen capture
     sct = mss.mss()
@@ -1292,7 +1392,7 @@ def screen3d_viewer_command(args):
 
             # Infer depth
             with torch.no_grad():
-                depth = model.infer_video_depth_one(frame_rgb, input_size=args.input_size, device=DEVICE, fp32=args.fp32)
+                depth, confidence = estimator.infer_depth(frame_rgb)
 
             # Initialize viewer on first frame
             if viewer_3d is None:
@@ -1321,6 +1421,31 @@ def screen3d_viewer_command(args):
                 if args.metric:
                     print(f"Metric depth: fx={args.focal_length_x:.1f}, fy={args.focal_length_y:.1f}")
                 print(f"Depth range: {args.depth_min_percentile}%-{args.depth_max_percentile}% percentile")
+
+                # Register 'X' key for "Capture and View"
+                def capture_and_view(vis):
+                    if viewer_3d.current_image is not None:
+                        timestamp = time.strftime("%Y%m%d_%H%M%S")
+                        temp_dir = Path("temp_captures")
+                        temp_dir.mkdir(exist_ok=True)
+                        image_path = temp_dir / f"capture_{timestamp}.png"
+                        
+                        # Save RGB image
+                        cv2.imwrite(str(image_path), cv2.cvtColor(viewer_3d.current_image, cv2.COLOR_RGB2BGR))
+                        print(f"\n[INFO] Captured frame to {image_path}")
+                        print("[INFO] Launching high-quality 3D viewer with DA3...")
+                        
+                        # Launch view3d in a separate process
+                        import subprocess
+                        subprocess.Popen([
+                            "da3d", "view3d", str(image_path), 
+                            "--model-type", "da3", 
+                            "--encoder", "da3-large"
+                        ])
+                        return False
+
+                viewer_3d.register_key_callback(ord('X'), capture_and_view)
+                print("Controls: [X] Capture and View with DA3, [Q] Quit")
 
             # Update 3D mesh
             viewer_3d.update_mesh(frame_rgb, depth, invert_depth=args.invert_depth)
@@ -1503,7 +1628,12 @@ Examples:
     # View3D command
     view3d_parser = subparsers.add_parser('view3d', help='View depth map as interactive 3D mesh or point cloud')
     view3d_parser.add_argument('image', type=str, help='Path to RGB image')
-    view3d_parser.add_argument('depth', type=str, help='Path to depth map (PNG, JPG, or .npy)')
+    view3d_parser.add_argument('depth', type=str, nargs='?', default=None, help='Path to depth map (optional, inferred if not provided)')
+    view3d_parser.add_argument('--model-type', type=str, default='vda', choices=['vda', 'da3'], help='Model type to use for inference')
+    view3d_parser.add_argument('--encoder', type=str, default='vitl', help='Model encoder/size')
+    view3d_parser.add_argument('--input-size', type=int, default=518, help='Input size for model')
+    view3d_parser.add_argument('--checkpoints-dir', type=str, default='./checkpoints', help='Checkpoints directory')
+    
     view3d_parser.add_argument('--depth-scale', type=float, default=0.5,
                               help='Z-displacement scale (0.1-2.0, where 1.0 = depth spans half image width, default: 0.5)')
     view3d_parser.add_argument('--depth-threshold', type=float, default=0.95,

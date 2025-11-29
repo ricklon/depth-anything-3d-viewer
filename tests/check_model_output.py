@@ -47,7 +47,7 @@ def check_model_output():
         # infer_video_depth takes list of frames
         # It returns (depths, fps)
         depths, _ = model.infer_video_depth(
-            [dummy_image], 
+            np.stack([dummy_image]), 
             target_fps=30, 
             input_size=518, 
             device=device
@@ -72,7 +72,7 @@ def check_model_output():
         
         with torch.no_grad():
             depths_m, _ = model_metric.infer_video_depth(
-                [dummy_image], 
+                np.stack([dummy_image]), 
                 target_fps=30, 
                 input_size=518, 
                 device=device
