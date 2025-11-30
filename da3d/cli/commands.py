@@ -25,6 +25,7 @@ import numpy as np
 import torch
 import cv2
 import time
+import threading
 from pathlib import Path
 
 # Video-Depth-Anything imports (from original repo - must be in PYTHONPATH)
@@ -36,6 +37,7 @@ from utils.dc_utils import read_video_frames, save_video
 
 from da3d.projection import DepthProjector, InteractiveParallaxController
 from da3d.viewing import DepthMeshViewer, RealTime3DViewer
+from da3d.viewing.gui_viewer import GUI3DViewer
 from da3d.config import (
     MODEL_CONFIGS, 
     DEFAULT_FOCAL_LENGTH_X, 
@@ -1372,6 +1374,67 @@ def screen3d_viewer_command(args):
     frame_count = 0
     target_frame_time = 1.0 / args.fps
 
+    if args.gui:
+        print("\nStarting GUI 3D Viewer...")
+        viewer = GUI3DViewer(window_name="Depth Anything 3D - Screen Viewer")
+        
+        # Configure initial settings from args
+        viewer.depth_scale = args.depth_scale
+        viewer.subsample = args.subsample
+        viewer.display_mode = args.display_mode
+        viewer.use_metric = args.metric
+        viewer.sor_neighbors = args.sor_neighbors
+        viewer.sor_std_ratio = args.sor_std_ratio
+        if args.metric:
+            viewer.focal_length_x = args.focal_length_x
+            viewer.focal_length_y = args.focal_length_y
+        
+        # Thread-local storage for mss
+        thread_data = threading.local()
+
+        def data_provider():
+            loop_start = time.time()
+            
+            # Initialize mss for this thread if needed
+            if not hasattr(thread_data, 'sct'):
+                import mss
+                thread_data.sct = mss.mss()
+
+            # Capture
+            try:
+                screenshot = thread_data.sct.grab(monitor)
+            except Exception as e:
+                print(f"Capture error: {e}")
+                return None
+
+            frame = np.array(screenshot)[:, :, :3]
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
+            
+            # Resize
+            h, w = frame_rgb.shape[:2]
+            if args.max_res > 0 and max(h, w) > args.max_res:
+                scale = args.max_res / max(h, w)
+                new_h, new_w = int(h * scale), int(w * scale)
+                frame_rgb = cv2.resize(frame_rgb, (new_w, new_h))
+                
+            # Infer
+            with torch.no_grad():
+                depth, _ = estimator.infer_depth(frame_rgb)
+                
+            # FPS Limit
+            loop_elapsed = time.time() - loop_start
+            if loop_elapsed < target_frame_time:
+                time.sleep(target_frame_time - loop_elapsed)
+                
+            return frame_rgb, depth
+            
+        try:
+            viewer.start(data_provider)
+        except KeyboardInterrupt:
+            pass
+        print("GUI session ended.")
+        return
+
     print("\nScreen 3D capture active. Close the 3D window to exit.")
 
     try:
@@ -1773,6 +1836,8 @@ Examples:
                                        help='Standard deviation ratio for Statistical Outlier Removal (default: 1.0, lower = more aggressive)')
     screen3d_viewer_parser.add_argument('--high-quality', action='store_true',
                                        help='Enable high-quality preset (960p, subsample=2, metric depth, optimized SOR)')
+    screen3d_viewer_parser.add_argument('--gui', action='store_true',
+                                       help='Enable experimental GUI controls')
     screen3d_viewer_parser.set_defaults(func=screen3d_viewer_command)
 
     args = parser.parse_args()

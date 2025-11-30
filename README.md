@@ -211,6 +211,9 @@ uv run da3d screen3d-viewer --depth-scale 0.8
 
 # Custom background color (RGB 0-1 range)
 uv run da3d screen3d-viewer --background 0.2,0.2,0.3
+
+# Experimental GUI controls (adjust parameters in real-time)
+uv run da3d screen3d-viewer --gui
 ```
 
 **Controls:**
