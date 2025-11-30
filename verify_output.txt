@@ -1,0 +1,4 @@
+[93m[WARN ] Dependency `gsplat` is required for rendering 3DGS. Install via: pip install git+https://github.com/nerfstudio-project/gsplat.git@0b4dddf04cb687367602c01196913cde6a743d70[0m
+Initializing DA3 Estimator...
+[FAIL] Could not load DA3 Estimator: 'da3_large_sky'
+Make sure depth-anything-3 is installed and weights are available.

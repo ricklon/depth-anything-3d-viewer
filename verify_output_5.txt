@@ -1,0 +1,21 @@
+A matching Triton is not available, some optimizations will not be enabled
+Traceback (most recent call last):
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\xformers\__init__.py", line 57, in _is_triton_available
+    import triton  # noqa
+    ^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'triton'
+[93m[WARN ] Dependency `gsplat` is required for rendering 3DGS. Install via: pip install git+https://github.com/nerfstudio-project/gsplat.git@0b4dddf04cb687367602c01196913cde6a743d70[0m
+Initializing DA3 Estimator...
+[97m[INFO ] using MLP layer as FFN[0m
+[OK] Model loaded.
+Using dummy image.
+Running Inference...
+[OK] Inference successful. Depth shape: (518, 518)
+[INFO] No confidence map returned.
+Running Verification Modules...
+[OK] Visual composite saved to: test_verify\validation_composite.png
+[OK] Metrics computed: {'depth_min': 0.8986591100692749, 'depth_max': 0.9262088537216187, 'depth_mean': 0.9132818579673767, 'depth_std': 0.002942724386230111, 'edge_sharpness_mean': 0.008854936651386322, 'confidence_mean': None, 'sky_region_mean': 0.9132723212242126, 'sky_region_std': 0.003277209121733904}
+[OK] Agent report saved to: test_verify\verification_report.md
+
+Verification Complete!
+Please review the report at: test_verify\verification_report.md

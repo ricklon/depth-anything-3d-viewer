@@ -169,6 +169,7 @@ uv run da3d webcam3d --depth-scale 0.8
 - Mouse drag: Rotate camera 360°
 - Mouse wheel: Zoom in/out
 - Shift + drag: Pan camera
+- **X: Capture current frame and view with high-quality DA3 model**
 - Q or ESC: Close window and exit
 
 **How to find your camera ID:**
@@ -216,6 +217,7 @@ uv run da3d screen3d-viewer --background 0.2,0.2,0.3
 - Mouse drag: Rotate 3D view
 - Mouse wheel: Zoom in/out
 - Shift + drag: Pan camera
+- **X: Capture current frame and view with high-quality DA3 model**
 - Q or ESC: Close window and exit
 
 **Use Cases:**

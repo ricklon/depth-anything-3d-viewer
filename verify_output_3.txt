@@ -1,0 +1,57 @@
+A matching Triton is not available, some optimizations will not be enabled
+Traceback (most recent call last):
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\xformers\__init__.py", line 57, in _is_triton_available
+    import triton  # noqa
+    ^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'triton'
+Traceback (most recent call last):
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\tools\verify_da3.py", line 66, in main
+    depth, confidence = estimator.infer_depth(img)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\da3d\estimators\da3_estimator.py", line 72, in infer_depth
+    result = self.model(image_tensor)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\torch\utils\_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\depth_anything_3\api.py", line 124, in forward
+    return self.model(image, extrinsics, intrinsics, export_feat_layers, infer_gs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\depth_anything_3\model\da3.py", line 126, in forward
+    feats, aux_feats = self.backbone(
+                       ^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\depth_anything_3\model\dinov2\dinov2.py", line 60, in forward
+    return self.pretrained.get_intermediate_layers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\depth_anything_3\model\dinov2\vision_transformer.py", line 360, in get_intermediate_layers
+    outputs, aux_outputs = self._get_intermediate_layers_not_chunked(
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rickr\GitHub\depth-anything-3d-viewer\.venv\Lib\site-packages\depth_anything_3\model\dinov2\vision_transformer.py", line 295, in _get_intermediate_layers_not_chunked
+    B, S, _, H, W = x.shape
+    ^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 5, got 4)
+[93m[WARN ] Dependency `gsplat` is required for rendering 3DGS. Install via: pip install git+https://github.com/nerfstudio-project/gsplat.git@0b4dddf04cb687367602c01196913cde6a743d70[0m
+Initializing DA3 Estimator...
+[97m[INFO ] using MLP layer as FFN[0m
+[OK] Model loaded.
+Using dummy image.
+Running Inference...
+[FAIL] Inference failed: not enough values to unpack (expected 5, got 4)

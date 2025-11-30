@@ -36,6 +36,7 @@ dependencies = [
     "imageio>=2.37.2",
     "python-dotenv>=1.2.1",
     "openai>=2.8.1",
+    "depth-anything-3 @ git+https://github.com/ByteDance-Seed/Depth-Anything-3",
 ]
 
 [project.optional-dependencies]

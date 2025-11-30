@@ -21,7 +21,7 @@ Converts 2D images with depth into true 3D geometry viewable from any angle.
 import numpy as np
 import cv2
 import open3d as o3d
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 
 
 class DepthMeshViewer:
@@ -473,6 +473,10 @@ class DepthMeshViewer:
         depth_path: str,
         subsample: int = 2,
         invert_depth: bool = False,
+        smooth_mesh: bool = True,
+        use_sor: bool = True,
+        sor_neighbors: int = 50,
+        sor_std_ratio: float = 1.0,
         **view_kwargs
     ) -> None:
         """
@@ -483,6 +487,10 @@ class DepthMeshViewer:
             depth_path: Path to depth map (grayscale image or .npy file)
             subsample: Downsample factor for performance
             invert_depth: Whether to invert depth values
+            smooth_mesh: Apply Laplacian smoothing to mesh
+            use_sor: Apply Statistical Outlier Removal (metric depth only)
+            sor_neighbors: Number of neighbors for SOR
+            sor_std_ratio: Standard deviation ratio for SOR
             **view_kwargs: Additional arguments for view_mesh()
         """
         # Load image
@@ -510,7 +518,14 @@ class DepthMeshViewer:
 
         print(f"Creating 3D mesh from {image.shape[1]}x{image.shape[0]} image...")
         mesh = self.create_mesh_from_depth(
-            image, depth, subsample=subsample, invert_depth=invert_depth
+            image, 
+            depth, 
+            subsample=subsample, 
+            invert_depth=invert_depth,
+            smooth_mesh=smooth_mesh,
+            use_sor=use_sor,
+            sor_neighbors=sor_neighbors,
+            sor_std_ratio=sor_std_ratio
         )
 
         print(f"Mesh created: {len(mesh.vertices)} vertices, {len(mesh.triangles)} triangles")
@@ -756,7 +771,19 @@ class RealTime3DViewer:
         self.vis.poll_events()
         self.vis.update_renderer()
 
+        self.current_image = image  # Store for callbacks
         self.frame_count += 1
+
+    def register_key_callback(self, key: int, callback: Callable) -> None:
+        """
+        Register a custom key callback.
+        
+        Args:
+            key: ASCII key code (e.g. ord('S'))
+            callback: Function to call (takes vis as argument)
+        """
+        if self.vis:
+            self.vis.register_key_callback(key, callback)
 
     def should_close(self) -> bool:
         """Check if the viewer window should close."""
