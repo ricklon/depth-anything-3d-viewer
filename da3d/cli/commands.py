@@ -1535,6 +1535,17 @@ def screen3d_viewer_command(args):
     print("Screen 3D capture session ended.")
 
 
+def projector_preview_command(args):
+    """Run projection preview."""
+    from da3d.projection.engine import ProjectionEngine
+    
+    if not Path(args.config).exists():
+        print(f"Error: Config file not found: {args.config}")
+        sys.exit(1)
+        
+    engine = ProjectionEngine(args.config)
+    engine.run_preview(args.show)
+
 def demo_command(args):
     """Launch Gradio web demo."""
     try:
@@ -1839,6 +1850,12 @@ Examples:
     screen3d_viewer_parser.add_argument('--gui', action='store_true',
                                        help='Enable experimental GUI controls')
     screen3d_viewer_parser.set_defaults(func=screen3d_viewer_command)
+
+    # Projector Preview
+    preview_parser = subparsers.add_parser('projector-preview', help='Preview projection show')
+    preview_parser.add_argument('--config', type=str, required=True, help='Path to projection config YAML')
+    preview_parser.add_argument('--show', type=str, required=True, help='Name of show to preview')
+    preview_parser.set_defaults(func=projector_preview_command)
 
     args = parser.parse_args()
 

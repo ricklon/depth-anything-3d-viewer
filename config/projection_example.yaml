@@ -1,0 +1,27 @@
+
+surfaces:
+  wall_main:
+    projector: main
+    type: flat
+    dst_quad_pixels: []
+
+content_sources:
+  test_pattern:
+    type: image
+    file: "assets/test_pattern.png"
+    light_vignette: true
+
+  depth_art:
+    type: depth_image
+    rgb: "assets/art_rgb.jpg"
+    depth: "assets/art_depth.png"
+    parallax_amount: 0.05
+
+shows:
+  gallery_demo:
+    loop: true
+    scenes:
+      - at: 0
+        surface: wall_main
+        content_layers:
+          - source: test_pattern
