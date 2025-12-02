@@ -1,4 +1,9 @@
 
+projectors:
+  main:
+    display_index: 1
+    resolution: [1920, 1080]
+
 surfaces:
   wall_main:
     projector: main

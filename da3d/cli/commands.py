@@ -1546,6 +1546,17 @@ def projector_preview_command(args):
     engine = ProjectionEngine(args.config)
     engine.run_preview(args.show)
 
+def projector_calibrate_command(args):
+    """Run projector calibration UI."""
+    from da3d.projection.calibration import CalibrationApp
+    
+    if not Path(args.config).exists():
+        print(f"Error: Config file not found: {args.config}")
+        sys.exit(1)
+        
+    app = CalibrationApp(args.config, args.projector)
+    app.run()
+
 def demo_command(args):
     """Launch Gradio web demo."""
     try:
@@ -1856,6 +1867,12 @@ Examples:
     preview_parser.add_argument('--config', type=str, required=True, help='Path to projection config YAML')
     preview_parser.add_argument('--show', type=str, required=True, help='Name of show to preview')
     preview_parser.set_defaults(func=projector_preview_command)
+
+    # Projector Calibrate
+    calibrate_parser = subparsers.add_parser('projector-calibrate', help='Calibrate projector surfaces')
+    calibrate_parser.add_argument('--config', type=str, required=True, help='Path to projection config YAML')
+    calibrate_parser.add_argument('--projector', type=str, required=True, help='Name of projector to calibrate')
+    calibrate_parser.set_defaults(func=projector_calibrate_command)
 
     args = parser.parse_args()
 
