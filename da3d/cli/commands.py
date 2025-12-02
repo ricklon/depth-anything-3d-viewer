@@ -94,6 +94,9 @@ def get_device():
     if torch.cuda.is_available():
         return 'cuda'
     elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+        # Enable MPS fallback for unsupported operations (e.g., bicubic interpolation)
+        # This allows operations not yet implemented on MPS to fall back to CPU
+        os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
         return 'mps'
     else:
         return 'cpu'
