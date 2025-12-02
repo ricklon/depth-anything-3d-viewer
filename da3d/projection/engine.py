@@ -22,7 +22,7 @@ class ProjectionEngine:
     def render_show(self, show_name: str) -> Dict[str, np.ndarray]:
         """
         Render one frame of the show.
-        Returns a dict mapping surface_name -> image.
+        Returns a dict mapping projector_name -> image.
         """
         if show_name not in self.config.shows:
             print(f"Error: Show {show_name} not found")
@@ -31,17 +31,26 @@ class ProjectionEngine:
         show = self.config.shows[show_name]
         t = time.time() - self.start_time
         
-        # Determine active scenes (simplified: just take first matching scene for now)
-        # In a real engine, we'd handle timeline blending
-        
-        surface_outputs = {}
-        
-        for scene in show.scenes:
-            # Simple logic: if multiple scenes target same surface, last one wins
-            # TODO: Implement proper timeline logic
+        # Initialize projector buffers
+        projector_buffers = {}
+        for p_name, p_conf in self.config.projectors.items():
+            w, h = p_conf.resolution
+            projector_buffers[p_name] = np.zeros((h, w, 3), dtype=np.uint8)
             
-            # Composite layers
-            final_img = None
+        # Render scenes
+        for scene in show.scenes:
+            surface_name = scene.surface
+            if surface_name not in self.config.surfaces:
+                continue
+                
+            surface = self.config.surfaces[surface_name]
+            proj_name = surface.projector
+            
+            if proj_name not in projector_buffers:
+                continue
+                
+            # Composite content for this surface
+            surface_img = None
             
             for layer in scene.content_layers:
                 if layer.source not in self.sources:
@@ -51,24 +60,42 @@ class ProjectionEngine:
                 if src_img is None:
                     continue
                 
-                if final_img is None:
-                    final_img = src_img.astype(np.float32)
+                if surface_img is None:
+                    surface_img = src_img.astype(np.float32)
                 else:
-                    # Resize if needed
-                    if src_img.shape != final_img.shape:
-                        src_img = cv2.resize(src_img, (final_img.shape[1], final_img.shape[0]))
+                    if src_img.shape != surface_img.shape:
+                        src_img = cv2.resize(src_img, (surface_img.shape[1], surface_img.shape[0]))
                     
-                    # Blend
                     if layer.blend == "additive":
-                        final_img += src_img.astype(np.float32)
-                    else: # normal
-                        # Simple overwrite for now, should handle alpha
-                        final_img = src_img.astype(np.float32)
+                        surface_img += src_img.astype(np.float32)
+                    else:
+                        surface_img = src_img.astype(np.float32)
             
-            if final_img is not None:
-                surface_outputs[scene.surface] = np.clip(final_img, 0, 255).astype(np.uint8)
+            if surface_img is None:
+                continue
                 
-        return surface_outputs
+            # Warp to projector space
+            if not surface.dst_quad_pixels or len(surface.dst_quad_pixels) != 4:
+                continue
+                
+            dst_pts = np.array(surface.dst_quad_pixels, dtype=np.float32)
+            h, w = surface_img.shape[:2]
+            src_pts = np.array([[0, 0], [w, 0], [w, h], [0, h]], dtype=np.float32)
+            
+            H_matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
+            
+            proj_h, proj_w = projector_buffers[proj_name].shape[:2]
+            warped = cv2.warpPerspective(surface_img, H_matrix, (proj_w, proj_h))
+            
+            # Composite onto projector buffer (simple max blending for now to handle overlaps)
+            # In reality, we might want masking
+            mask = (warped > 0).astype(np.uint8)
+            
+            # Simple alpha blend or max
+            current = projector_buffers[proj_name]
+            projector_buffers[proj_name] = np.maximum(current, warped.astype(np.uint8))
+                
+        return projector_buffers
 
     def run_preview(self, show_name: str):
         """Run a simple OpenCV preview window."""
@@ -82,10 +109,14 @@ class ProjectionEngine:
                 time.sleep(0.1)
                 continue
                 
-            # Stitch all surfaces into one debug view
-            # For now, just show them in separate windows
-            for surface_name, img in outputs.items():
-                cv2.imshow(f"Surface: {surface_name}", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+            for proj_name, img in outputs.items():
+                # Scale down for preview if huge
+                view_img = img
+                if img.shape[1] > 1280:
+                    scale = 1280 / img.shape[1]
+                    view_img = cv2.resize(img, None, fx=scale, fy=scale)
+                    
+                cv2.imshow(f"Projector: {proj_name}", cv2.cvtColor(view_img, cv2.COLOR_RGB2BGR))
             
             if cv2.waitKey(16) & 0xFF == ord('q'):
                 break
