@@ -94,16 +94,12 @@ def get_device(enable_mps_fallback=True):
     """Get the best available device (CUDA, MPS, or CPU).
 
     Args:
-        enable_mps_fallback: If True, automatically enable PYTORCH_ENABLE_MPS_FALLBACK
-                           for MPS devices (default: True for convenience)
+        enable_mps_fallback: Parameter kept for API compatibility but MPS fallback
+                           is now set at CLI entry point before torch import.
     """
     if torch.cuda.is_available():
         return 'cuda'
     elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
-        if enable_mps_fallback:
-            # Enable MPS fallback for unsupported operations (e.g., bicubic interpolation)
-            # This allows operations not yet implemented on MPS to fall back to CPU
-            os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
         return 'mps'
     else:
         return 'cpu'

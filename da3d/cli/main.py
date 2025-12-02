@@ -6,6 +6,12 @@ Main CLI entry point for Depth-Anything-3D viewer.
 import sys
 import os
 
+# Enable MPS fallback BEFORE importing torch
+# This must happen before any PyTorch imports to take effect
+# Only check the flag, don't force it yet (will be controlled by --no-mps-fallback)
+if '--no-mps-fallback' not in sys.argv:
+    os.environ.setdefault('PYTORCH_ENABLE_MPS_FALLBACK', '1')
+
 # Ensure parent Video-Depth-Anything is in path
 # This assumes Video-Depth-Anything is in the parent directory
 parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
