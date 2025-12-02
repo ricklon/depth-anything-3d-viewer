@@ -35,3 +35,14 @@ The project has grown organically and needs refactoring to be production-ready.
     - Implement high-quality 3D recording (capturing the rendered view, not just the screen).
 - [ ] **Multi-Camera Support:**
     - Robustify camera selection and handling.
+
+## 5. Immersive Projection (New)
+- [ ] **Core Framework:**
+    - Define YAML schema for projectors, surfaces, and shows.
+    - Implement `projector-calibrate` CLI tool.
+- [ ] **Rendering Pipeline:**
+    - Implement CPU-based homography mapping (prototype).
+    - Implement GPU-based mapping (production).
+- [ ] **Content Sources:**
+    - Support 2D images, depth-enhanced images, and 3D scenes.
+    - Create "Lobby" and "Gallery" example configurations.

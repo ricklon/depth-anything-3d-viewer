@@ -24,6 +24,7 @@ class GUI3DViewer:
         self.depth = None
         self.geometry = None
         self.geometry_name = "geometry"
+        self.camera_initialized = False
         
         # Settings
         self.depth_scale = 0.5
@@ -62,7 +63,7 @@ class GUI3DViewer:
         # Lighting
         self.widget3d.scene.scene.enable_sun_light(True)
         self.widget3d.scene.scene.set_sun_light(
-            [-1, -1, -1],  # direction
+            [0, 0, 1],     # direction (from camera to scene)
             [1, 1, 1],     # color
             100000         # intensity
         )
@@ -84,7 +85,7 @@ class GUI3DViewer:
         
         # Camera defaults
         self.widget3d.setup_camera(60, self.widget3d.scene.bounding_box, [0, 0, 0])
-        self.widget3d.look_at([0, 0, 0], [0, 0, -1], [0, 1, 0])
+        self.widget3d.set_view_controls(gui.SceneWidget.Controls.ROTATE_CAMERA)
 
     def _add_control_group(self):
         em = self.window.theme.font_size
@@ -140,12 +141,40 @@ class GUI3DViewer:
         btn_reset.set_on_clicked(self._on_reset_view)
         self.panel.add_child(btn_reset)
         
+        # Debug
+        btn_debug = gui.Button("Debug Info")
+        btn_debug.set_on_clicked(self._on_debug)
+        self.panel.add_child(btn_debug)
+
         # Quit
         btn_quit = gui.Button("Quit")
         btn_quit.set_on_clicked(self._on_quit)
         self.panel.add_child(btn_quit)
+        
+        # Controls Help
+        self.panel.add_child(gui.Label("")) # Spacer
+        self.panel.add_child(gui.Label("Controls:"))
+        self.panel.add_child(gui.Label("  Left Drag: Rotate"))
+        self.panel.add_child(gui.Label("  Ctrl + Left: Pan"))
+        self.panel.add_child(gui.Label("  Wheel: Zoom"))
 
     # Callbacks
+    def _on_debug(self):
+        print("\n--- Debug Info ---")
+        camera = self.widget3d.scene.camera
+        print(f"Camera Position: {camera.get_position()}")
+        print(f"Camera Forward: {camera.get_forward_vector()}")
+        print(f"Camera Up: {camera.get_up_vector()}")
+        print(f"Field of View: {camera.get_field_of_view()}")
+        
+        if self.widget3d.scene.has_geometry(self.geometry_name):
+            bbox = self.widget3d.scene.get_geometry_bounding_box(self.geometry_name)
+            print(f"Geometry Bounds: Min={bbox.get_min_bound()}, Max={bbox.get_max_bound()}")
+            print(f"Geometry Center: {bbox.get_center()}")
+        else:
+            print("No geometry in scene")
+            
+        print("------------------\n")
     def _on_depth_scale(self, val):
         self.depth_scale = val
         self.mesh_generator.depth_scale = val
@@ -160,6 +189,10 @@ class GUI3DViewer:
     def _on_metric_checked(self, checked):
         self.use_metric = checked
         self.mesh_generator.use_metric_depth = checked
+        # Ensure focal lengths are set if switching to metric
+        if checked and (self.mesh_generator.focal_length_x is None or self.mesh_generator.focal_length_y is None):
+             self.mesh_generator.focal_length_x = self.focal_length_x
+             self.mesh_generator.focal_length_y = self.focal_length_y
         
     def _on_sor_neighbors(self, val):
         self.sor_neighbors = int(val)
@@ -168,7 +201,8 @@ class GUI3DViewer:
         self.sor_std_ratio = val
         
     def _on_reset_view(self):
-        self.widget3d.look_at([0, 0, 0], [0, 0, -1], [0, 1, 0])
+        # Reset camera on next frame update
+        self.camera_initialized = False
         
     def _on_quit(self):
         self.is_running = False
@@ -179,27 +213,30 @@ class GUI3DViewer:
         if self.image is None or self.depth is None:
             return
             
-        # Generate mesh/pcd
-        # Note: We create a new mesh every frame. 
-        # Optimization: Update existing mesh vertices if size hasn't changed.
-        
         try:
+            # Generate geometry
             geometry = self.mesh_generator.create_mesh_from_depth(
                 self.image, 
                 self.depth,
                 subsample=self.subsample,
-                use_sor=self.use_metric, # Only use SOR if metric is enabled (usually)
+                use_sor=self.use_metric, 
                 sor_neighbors=self.sor_neighbors,
                 sor_std_ratio=self.sor_std_ratio,
                 smooth_mesh=self.smooth_mesh
             )
             
-            # Update scene
-            # Remove old geometry
+            # Ensure normals are computed
+            if isinstance(geometry, o3d.geometry.TriangleMesh):
+                if not geometry.has_vertex_normals():
+                    geometry.compute_vertex_normals()
+            elif isinstance(geometry, o3d.geometry.PointCloud):
+                if not geometry.has_normals():
+                    geometry.estimate_normals()
+            
+            # Update scene safely
             if self.widget3d.scene.has_geometry(self.geometry_name):
                 self.widget3d.scene.remove_geometry(self.geometry_name)
-                
-            # Add new geometry
+            
             mat = rendering.MaterialRecord()
             mat.shader = "defaultLit"
             if self.display_mode == "pointcloud":
@@ -207,7 +244,12 @@ class GUI3DViewer:
                 
             self.widget3d.scene.add_geometry(self.geometry_name, geometry, mat)
             
-            # Force redraw
+            # Setup camera only once
+            if not self.camera_initialized:
+                bbox = geometry.get_axis_aligned_bounding_box()
+                self.widget3d.setup_camera(60, bbox, [0, 0, 0])
+                self.camera_initialized = True
+                
             self.window.post_redraw()
             
         except Exception as e:
@@ -217,14 +259,14 @@ class GUI3DViewer:
         while self.is_running:
             if self.data_provider:
                 try:
-                    # Get new data
                     res = self.data_provider()
                     if res is None:
                         break
                     
+                    # Store data
                     self.image, self.depth = res
                     
-                    # Post update to main thread
+                    # Schedule update on main thread
                     gui.Application.instance.post_to_main_thread(self.window, self.update_geometry)
                     
                 except Exception as e:
