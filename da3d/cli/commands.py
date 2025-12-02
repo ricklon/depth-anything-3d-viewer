@@ -57,8 +57,9 @@ def get_estimator(args, streaming=False):
     """Factory to get the correct estimator."""
     model_type = getattr(args, 'model_type', 'vda')
 
-    # Get device
-    device = get_device()
+    # Get device with MPS fallback control
+    enable_mps_fallback = getattr(args, 'mps_fallback', True)
+    device = get_device(enable_mps_fallback=enable_mps_fallback)
 
     if model_type == 'da3':
         # DA3 doesn't support streaming mode in the same way, so we just init the estimator
@@ -89,14 +90,20 @@ def get_estimator(args, streaming=False):
         return estimator
 
 
-def get_device():
-    """Get the best available device (CUDA, MPS, or CPU)."""
+def get_device(enable_mps_fallback=True):
+    """Get the best available device (CUDA, MPS, or CPU).
+
+    Args:
+        enable_mps_fallback: If True, automatically enable PYTORCH_ENABLE_MPS_FALLBACK
+                           for MPS devices (default: True for convenience)
+    """
     if torch.cuda.is_available():
         return 'cuda'
     elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
-        # Enable MPS fallback for unsupported operations (e.g., bicubic interpolation)
-        # This allows operations not yet implemented on MPS to fall back to CPU
-        os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+        if enable_mps_fallback:
+            # Enable MPS fallback for unsupported operations (e.g., bicubic interpolation)
+            # This allows operations not yet implemented on MPS to fall back to CPU
+            os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
         return 'mps'
     else:
         return 'cpu'
@@ -1659,6 +1666,8 @@ Examples:
     screen3d_parser.add_argument('--fps', type=int, default=10, help='Target FPS')
     screen3d_parser.add_argument('--fp32', action='store_true', help='Use FP32 precision')
     screen3d_parser.add_argument('--checkpoints-dir', type=str, default='./checkpoints', help='Checkpoints directory')
+    screen3d_parser.add_argument('--no-mps-fallback', dest='mps_fallback', action='store_false', default=True,
+                                help='Disable automatic MPS fallback for unsupported operations (macOS only)')
     screen3d_parser.add_argument('--virtual-cam', action='store_true', help='Output to OBS Virtual Camera')
     screen3d_parser.add_argument('--auto-rotate', action='store_true', help='Enable automatic rotation')
     screen3d_parser.add_argument('--depth-scale', type=float, default=0.5, help='3D effect strength (0.1-2.0)')
@@ -1690,6 +1699,8 @@ Examples:
     video_parser.add_argument('--focal-length-x', type=float, default=470.4, help='Focal length X (for metric depth)')
     video_parser.add_argument('--focal-length-y', type=float, default=470.4, help='Focal length Y (for metric depth)')
     video_parser.add_argument('--checkpoints-dir', type=str, default='./checkpoints', help='Checkpoints directory')
+    video_parser.add_argument('--no-mps-fallback', dest='mps_fallback', action='store_false', default=True,
+                             help='Disable automatic MPS fallback for unsupported operations (macOS only)')
     video_parser.set_defaults(func=video_command)
 
     # Webcam command
@@ -1707,6 +1718,8 @@ Examples:
     webcam_parser.add_argument('--fp32', action='store_true', help='Use FP32 precision')
     webcam_parser.add_argument('--grayscale', action='store_true', help='Display grayscale depth')
     webcam_parser.add_argument('--checkpoints-dir', type=str, default='./checkpoints', help='Checkpoints directory')
+    webcam_parser.add_argument('--no-mps-fallback', dest='mps_fallback', action='store_false', default=True,
+                              help='Disable automatic MPS fallback for unsupported operations (macOS only)')
     webcam_parser.set_defaults(func=webcam_command)
 
     # Demo command
@@ -1809,6 +1822,8 @@ Examples:
                                 help='Standard deviation ratio for Statistical Outlier Removal (default: 1.0, lower = more aggressive)')
     webcam3d_parser.add_argument('--high-quality', action='store_true',
                                 help='Enable high-quality preset (1024p input, subsample=2, metric depth, optimized SOR)')
+    webcam3d_parser.add_argument('--no-mps-fallback', dest='mps_fallback', action='store_false', default=True,
+                                help='Disable automatic MPS fallback for unsupported operations (macOS only)')
     webcam3d_parser.set_defaults(func=webcam3d_command)
 
     # Screen3D Viewer command
@@ -1866,6 +1881,8 @@ Examples:
                                        help='Enable high-quality preset (960p, subsample=2, metric depth, optimized SOR)')
     screen3d_viewer_parser.add_argument('--gui', action='store_true',
                                        help='Enable experimental GUI controls')
+    screen3d_viewer_parser.add_argument('--no-mps-fallback', dest='mps_fallback', action='store_false', default=True,
+                                       help='Disable automatic MPS fallback for unsupported operations (macOS only)')
     screen3d_viewer_parser.set_defaults(func=screen3d_viewer_command)
 
     # Projector Preview
