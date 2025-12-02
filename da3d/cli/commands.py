@@ -56,12 +56,15 @@ from da3d.estimators.da3_estimator import DA3Estimator
 def get_estimator(args, streaming=False):
     """Factory to get the correct estimator."""
     model_type = getattr(args, 'model_type', 'vda')
-    
+
+    # Get device
+    device = get_device()
+
     if model_type == 'da3':
         # DA3 doesn't support streaming mode in the same way, so we just init the estimator
         # We might need to map 'encoder' args if they differ
         config = {'encoder': args.encoder} # DA3 uses 'encoder' arg too?
-        estimator = DA3Estimator()
+        estimator = DA3Estimator(device=device)
         estimator.load_model(config)
         return estimator
     else:
@@ -75,13 +78,13 @@ def get_estimator(args, streaming=False):
         # We need to construct the checkpoint path manually if VDAEstimator expects it
         # Or VDAEstimator can handle it.
         # Let's look at VDAEstimator again. It expects 'checkpoint_path' in config.
-        
+
         checkpoint_name = 'metric_video_depth_anything' if args.metric else 'video_depth_anything'
         checkpoint_path = Path(args.checkpoints_dir) / f'{checkpoint_name}_{args.encoder}.pth'
-        
+
         config['checkpoint_path'] = str(checkpoint_path)
-        
-        estimator = VDAEstimator(streaming=streaming)
+
+        estimator = VDAEstimator(device=device, streaming=streaming)
         estimator.load_model(config)
         return estimator
 
