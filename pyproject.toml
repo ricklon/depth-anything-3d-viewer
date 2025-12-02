@@ -30,13 +30,11 @@ dependencies = [
     "open3d>=0.18.0",
     "scipy>=1.11.0",
     "matplotlib>=3.7.0",
-    "decord>=0.6.0",
     "einops>=0.8.1",
     "easydict>=1.13",
     "imageio>=2.37.2",
     "python-dotenv>=1.2.1",
     "openai>=2.8.1",
-    "depth-anything-3 @ git+https://github.com/ByteDance-Seed/Depth-Anything-3",
 ]
 
 [project.optional-dependencies]
@@ -48,6 +46,9 @@ virtual-cam = [
 ]
 demo = [
     "gradio>=4.0.0",
+]
+da3 = [
+    "depth-anything-3 @ git+https://github.com/ByteDance-Seed/Depth-Anything-3",
 ]
 xformers = [
     "xformers>=0.0.27,<0.0.28",
@@ -100,22 +101,8 @@ warn_unused_configs = true
 disallow_untyped_defs = false
 
 [tool.uv]
-# UV-specific configuration for GPU acceleration
-
-# Use unsafe-best-match to allow packages from PyTorch's custom index
+# UV-specific configuration for dependency resolution
 index-strategy = "unsafe-best-match"
-
-# Add PyTorch CUDA repository
-[[tool.uv.index]]
-name = "pytorch-cu121"
-url = "https://download.pytorch.org/whl/cu121"
-explicit = true
-
-# Specify that torch and torchvision should come from CUDA index
-# xformers will use PyPI (has Windows wheels)
-[tool.uv.sources]
-torch = { index = "pytorch-cu121" }
-torchvision = { index = "pytorch-cu121" }
 
 [dependency-groups]
 dev = [
