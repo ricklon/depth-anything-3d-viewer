@@ -20,7 +20,9 @@ content_sources:
     type: depth_image
     rgb: "assets/art_rgb.jpg"
     depth: "assets/art_depth.png"
-    parallax_amount: 0.05
+  lobby_test:
+    type: lobby_scene
+    scene_asset: "assets/lobby_cube.obj"
 
 shows:
   gallery_demo:
@@ -30,3 +32,11 @@ shows:
         surface: wall_main
         content_layers:
           - source: test_pattern
+
+  lobby_demo:
+    loop: true
+    scenes:
+      - at: 0
+        surface: wall_main
+        content_layers:
+          - source: lobby_test

@@ -113,11 +113,95 @@ class DepthImageSource(ContentSource):
         
         return cv2.remap(self.rgb_image, map_x, map_y, cv2.INTER_LINEAR)
 
+class LobbySceneSource(ContentSource):
+    """
+    Renders a 3D scene (mesh or point cloud) from a specific viewpoint.
+    Uses legacy Visualizer for better cross-platform support on Windows/Mac.
+    """
+    def __init__(self, name: str, config: dict):
+        super().__init__(name, config)
+        self.vis = None
+        self.width = 1920 
+        self.height = 1080
+        self._init_renderer()
+
+    def _init_renderer(self):
+        import open3d as o3d
+        
+        if not self.config.scene_asset or not Path(self.config.scene_asset).exists():
+            print(f"Error: Scene asset not found: {self.config.scene_asset}")
+            return
+
+        # Initialize Visualizer
+        # Note: This might open a window. For a projection system, this is often acceptable
+        # as we want to output to a display anyway.
+        self.vis = o3d.visualization.Visualizer()
+        self.vis.create_window(width=self.width, height=self.height, visible=False)
+        
+        # Load geometry
+        ext = Path(self.config.scene_asset).suffix.lower()
+        geometry = None
+        
+        try:
+            if ext in ['.ply', '.pcd', '.xyz']:
+                geometry = o3d.io.read_point_cloud(self.config.scene_asset)
+            elif ext in ['.obj', '.stl', '.gltf', '.glb']:
+                geometry = o3d.io.read_triangle_mesh(self.config.scene_asset)
+                if not geometry.has_vertex_normals():
+                    geometry.compute_vertex_normals()
+            
+            if geometry:
+                self.vis.add_geometry(geometry)
+                
+                # Setup render options
+                opt = self.vis.get_render_option()
+                opt.background_color = np.asarray([0, 0, 0])
+                opt.light_on = True
+                
+        except Exception as e:
+            print(f"Error loading scene {self.name}: {e}")
+
+    def render(self, t: float) -> Optional[np.ndarray]:
+        if not self.vis:
+            return None
+            
+        # Update camera
+        import numpy as np
+        
+        radius = 2.0
+        x = np.sin(t * 0.5) * radius
+        z = np.cos(t * 0.5) * radius
+        
+        ctr = self.vis.get_view_control()
+        
+        # Legacy look_at is a bit different, but works
+        eye = np.array([x, 1.0, z])
+        center = np.array([0.0, 0.0, 0.0])
+        up = np.array([0.0, 1.0, 0.0])
+        
+        ctr.set_lookat(center)
+        ctr.set_front(eye - center)
+        ctr.set_up(up)
+        ctr.set_zoom(0.8)
+        
+        self.vis.poll_events()
+        self.vis.update_renderer()
+        
+        img = self.vis.capture_screen_float_buffer(do_render=True)
+        img = (np.asarray(img) * 255).astype(np.uint8)
+        return img
+
+    def __del__(self):
+        if self.vis:
+            self.vis.destroy_window()
+
 def create_content_source(name: str, config) -> ContentSource:
     if config.type == "image":
         return ImageSource(name, config)
     elif config.type == "depth_image":
         return DepthImageSource(name, config)
+    elif config.type == "lobby_scene":
+        return LobbySceneSource(name, config)
     else:
         print(f"Warning: Unknown content type {config.type} for {name}")
         return None
