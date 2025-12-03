@@ -13,10 +13,14 @@ Transform depth maps into stunning 3D visualizations with full camera control, r
 - 🖥️ **Screen Capture 3D** - Turn any screen content into interactive 3D geometry
 - 📊 **Static 3D Viewing** - Load and explore depth maps from any angle
 - 🎨 **2.5D Parallax Effects** - Create cinematic depth effects for videos
+- 🎬 **Immersive Projection** - Multi-projector calibration and shows for installations
 - 🔷 **Mesh & Point Cloud Modes** - Choose between triangle mesh or point cloud visualization
-- ⚡ **Performance Optimized** - GPU-accelerated with adjustable quality settings
+- 📏 **Metric Depth Support** - True 3D reconstruction with camera intrinsics
+- ⚡ **Performance Optimized** - GPU-accelerated with adjustable quality settings (CUDA, MPS)
 - 🎯 **Depth Range Control** - Automatically reduce extreme values for better visualization
-- 📏 **Proportional Depth Scaling** - Z-depth scales naturally with X/Y dimensions
+- 🧹 **Statistical Outlier Removal** - Clean noisy depth maps for smoother meshes
+- 📸 **High-Quality Capture** - Press X to capture frames with Depth-Anything-3 (DA3)
+- 🎚️ **GUI Controls** - Real-time parameter adjustment (experimental)
 
 ## Quick Start
 
@@ -32,8 +36,11 @@ cd depth-anything-3d-viewer
 # Sync dependencies with uv
 uv sync
 
-# Install Video-Depth-Anything dependency
-uv pip install -e ../Video-Depth-Anything
+# Install Video-Depth-Anything dependency (if available locally)
+# Note: This package will be installed automatically when available via PyPI
+cd ../Video-Depth-Anything
+uv pip install -e .
+cd ../depth-anything-3d-viewer
 
 # Check installation status
 uv run da3d status
@@ -80,6 +87,8 @@ cd ..
 
 ### Usage
 
+> **Note:** All commands use `uv run` to execute in the project's virtual environment automatically. This eliminates the need to manually activate the venv. If you prefer, you can activate the venv with `source .venv/bin/activate` and then run commands directly (e.g., `da3d --help` instead of `uv run da3d --help`).
+
 **If using uv (recommended):**
 
 ```bash
@@ -122,10 +131,12 @@ da3d screen3d-viewer
 
 | Command | Description | Common Options |
 |---------|-------------|----------------|
-| `uv run da3d webcam3d` | View webcam in interactive 3D mesh | `--camera-id 1` `--display-mode pointcloud` |
+| `uv run da3d webcam3d` | View webcam in interactive 3D mesh | `--camera-id 1` `--display-mode pointcloud` `--metric` |
 | `uv run da3d screen3d-viewer` | View desktop/screen in 3D mesh | `--subsample 4 --max-res 320` (fast mode) |
 | `uv run da3d view3d img.jpg depth.png` | View static depth map in 3D | `--depth-scale 0.8` `--display-mode pointcloud` |
 | `uv run da3d screen3d --auto-rotate` | 2.5D parallax screen effect | `--mouse-control` `--virtual-cam` |
+| `uv run da3d projector-preview` | Preview immersive projection show | `--config config.yaml --show myshow` |
+| `uv run da3d projector-calibrate` | Calibrate projector surfaces | `--config config.yaml --projector proj1` |
 
 **3D Viewer Controls (all commands):**
 - **Mouse drag:** Rotate 3D view
@@ -169,8 +180,10 @@ uv run da3d webcam3d --depth-scale 0.8
 - Mouse drag: Rotate camera 360°
 - Mouse wheel: Zoom in/out
 - Shift + drag: Pan camera
-- **X: Capture current frame and view with high-quality DA3 model**
+- **X: Capture high-quality frame with Depth-Anything-3 (DA3) - significant quality boost!**
 - Q or ESC: Close window and exit
+
+> **💡 Tip:** Press **X** during live viewing to capture the current frame and process it with the high-quality Depth-Anything-3 model. This provides much better depth quality than real-time Video-Depth-Anything, perfect for capturing still 3D scenes.
 
 **How to find your camera ID:**
 ```bash
@@ -214,14 +227,21 @@ uv run da3d screen3d-viewer --background 0.2,0.2,0.3
 
 # Experimental GUI controls (adjust parameters in real-time)
 uv run da3d screen3d-viewer --gui
+
+# Also available with webcam3d
+uv run da3d webcam3d --gui
 ```
+
+> **🧪 Experimental:** The `--gui` flag enables a real-time parameter adjustment window. Tune depth scale, percentile ranges, and other settings on-the-fly without restarting.
 
 **Controls:**
 - Mouse drag: Rotate 3D view
 - Mouse wheel: Zoom in/out
 - Shift + drag: Pan camera
-- **X: Capture current frame and view with high-quality DA3 model**
+- **X: Capture high-quality frame with Depth-Anything-3 (DA3) - significant quality boost!**
 - Q or ESC: Close window and exit
+
+> **💡 Tip:** Press **X** during screen capture to freeze and process with the high-quality Depth-Anything-3 model for maximum detail.
 
 **Use Cases:**
 - View game footage in true 3D
@@ -278,6 +298,56 @@ uv run da3d screen3d --show-displacement --test-grid
 
 **Note:** `screen3d` creates 2.5D parallax effects, while `screen3d-viewer` creates true interactive 3D meshes.
 
+### `projector-preview` - Immersive Projection Preview
+
+Preview multi-projector shows for immersive installations:
+
+```bash
+# Preview a configured show
+uv run da3d projector-preview --config projection_config.yaml --show lobby_scene
+
+# The config YAML defines:
+# - Projector layouts and positions
+# - Surface geometries and calibration
+# - Show sequences and transitions
+```
+
+**Use Cases:**
+- Multi-wall projection installations
+- Interactive museum exhibits
+- Immersive art installations
+- Architectural projection mapping
+
+### `projector-calibrate` - Projector Calibration
+
+Calibrate projector surfaces for accurate geometric warping:
+
+```bash
+# Calibrate a specific projector
+uv run da3d projector-calibrate --config projection_config.yaml --projector projector_1
+
+# Interactive calibration process:
+# 1. Click corner points on projected test pattern
+# 2. System calculates homography transformation
+# 3. Saves calibration to config file
+```
+
+**Configuration Example:**
+```yaml
+projectors:
+  projector_1:
+    resolution: [1920, 1080]
+    position: [0, 0, 2.5]  # X, Y, Z in meters
+
+surfaces:
+  wall_left:
+    corners:  # Will be filled during calibration
+      - [x1, y1]
+      - [x2, y2]
+      - [x3, y3]
+      - [x4, y4]
+```
+
 ## Python API
 
 ```python
@@ -319,6 +389,67 @@ projected = projector.project_with_parallax(
 ```
 
 ## Key Parameters
+
+### Metric Depth Mode
+
+**Accurate 3D reconstruction with camera intrinsics:**
+
+Metric depth mode uses camera intrinsics (focal length, principal point) for accurate 3D reconstruction in real-world units, rather than relative depth scaling.
+
+```bash
+# Enable metric depth with default camera intrinsics
+uv run da3d webcam3d --metric
+
+# Specify custom camera intrinsics (focal lengths in pixels)
+uv run da3d webcam3d --metric \
+    --focal-length-x 525.0 \
+    --focal-length-y 525.0 \
+    --principal-point-x 320.0 \
+    --principal-point-y 240.0
+
+# High-quality metric mode (better depth, slower)
+uv run da3d webcam3d --metric --high-quality
+```
+
+**Key Options:**
+- `--metric` - Enable metric depth estimation
+- `--focal-length-x` / `--focal-length-y` - Camera focal lengths in pixels (default: 470.4)
+- `--principal-point-x` / `--principal-point-y` - Optical center (default: image center)
+- `--metric-depth-scale` - Scale factor for depth values (default: 1.0)
+- `--high-quality` - Use optimized settings for metric depth (slower, better quality)
+
+**When to use metric depth:**
+- Accurate measurements needed
+- True-to-life 3D proportions
+- Scientific/research applications
+- When camera calibration data is available
+
+**Note:** Metric depth ignores `--depth-scale` and uses camera intrinsics instead.
+
+### Statistical Outlier Removal (SOR)
+
+Clean noisy depth maps by removing statistical outliers:
+
+```bash
+# Enable SOR with custom parameters
+uv run da3d webcam3d --sor-neighbors 20 --sor-std-ratio 2.0
+
+# Aggressive noise removal
+uv run da3d webcam3d --sor-neighbors 30 --sor-std-ratio 1.5
+
+# Gentle cleanup (preserve more detail)
+uv run da3d webcam3d --sor-neighbors 10 --sor-std-ratio 3.0
+```
+
+**Parameters:**
+- `--sor-neighbors` - Number of neighbors to analyze (default: 20)
+- `--sor-std-ratio` - Standard deviation ratio threshold (default: 2.0)
+
+**Effect:**
+- Lower `sor-std-ratio` = more aggressive removal
+- Higher `sor-neighbors` = more accurate but slower
+- Helps eliminate "floating pixels" and depth noise
+- Produces smoother, cleaner meshes
 
 ### Depth Range Control
 
@@ -421,7 +552,7 @@ See the `examples/` directory for complete Python examples:
 
 The project supports:
 - **NVIDIA GPUs** (CUDA) - Windows/Linux
-- **Apple Silicon** (Metal/MPS) - macOS (M1/M2/M3)
+- **Apple Silicon** (Metal/MPS) - macOS (M1/M2/M3/M4)
 
 The project is configured for CUDA 12.1 by default on Windows/Linux. After installation:
 
@@ -438,6 +569,25 @@ If you see "CPU only", follow the [GPU Setup Guide](GPU_SETUP.md) for detailed i
 rm -rf .venv
 uv sync
 ```
+
+#### macOS (Apple Silicon) - MPS Support
+
+**Automatic MPS Fallback:** By default, operations not supported by Metal Performance Shaders (MPS) automatically fall back to CPU. This provides maximum compatibility.
+
+```bash
+# Default behavior (recommended) - automatic CPU fallback for unsupported ops
+uv run da3d webcam3d
+
+# Disable MPS fallback (errors on unsupported operations instead)
+uv run da3d webcam3d --no-mps-fallback
+```
+
+**When to disable MPS fallback:**
+- Debugging MPS compatibility issues
+- Ensuring all operations run on GPU
+- Performance profiling
+
+**Note:** MPS fallback is automatically enabled on macOS to ensure stable operation with Apple Silicon GPUs.
 
 ### Optional Dependencies
 
@@ -499,6 +649,7 @@ If you see build errors related to `xformers` during `uv sync`:
 If you specifically need xformers for optimization, install it separately after the main installation:
 ```bash
 uv pip install xformers --index-url https://download.pytorch.org/whl/cu121
+# Note: uv pip is used here as xformers requires special index configuration
 ```
 
 ### 3D viewer window not appearing

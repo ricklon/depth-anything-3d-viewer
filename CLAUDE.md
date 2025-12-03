@@ -13,62 +13,62 @@ Depth-Anything-3D Viewer is a Python package that extends Video-Depth-Anything w
 ### Installation
 
 ```bash
-# Install package in editable mode
+# Install with uv (recommended, faster)
+uv sync                    # Install all dependencies
+uv sync --all-extras      # Install with all optional dependencies
+
+# Or with pip (traditional method)
 pip install -e .
-
-# Or with uv (faster)
-uv pip install -e .
-
-# Install with all optional dependencies (screen capture, virtual cam, demo)
-pip install -e ".[all]"
-
-# Install development dependencies (tests, linting)
-pip install -e ".[dev]"
+pip install -e ".[all]"   # With all optional dependencies
+pip install -e ".[dev]"   # With development dependencies
 ```
+
+**Using uv commands:**
+All commands in this guide use `uv run` to ensure they execute in the project's virtual environment. This eliminates the need to manually activate the virtual environment. Alternatively, you can activate the venv with `source .venv/bin/activate` and then run commands directly (e.g., `da3d --help` instead of `uv run da3d --help`).
 
 ### Testing
 
 ```bash
 # Run all tests
-pytest
+uv run pytest
 
 # Run specific test file
-pytest tests/test_mesh.py
+uv run pytest tests/test_mesh.py
 
 # Run with coverage
-pytest --cov=da3d tests/
+uv run pytest --cov=da3d tests/
 ```
 
 ### Code Quality
 
 ```bash
 # Format code
-black da3d/ tests/
+uv run black da3d/ tests/
 
 # Sort imports
-isort da3d/ tests/
+uv run isort da3d/ tests/
 
 # Type checking
-mypy da3d/
+uv run mypy da3d/
 ```
 
 ### Running the CLI
 
 ```bash
 # Main CLI entry point
-da3d --help
+uv run da3d --help
 
 # Real-time webcam 3D viewing
-da3d webcam3d
+uv run da3d webcam3d
 
 # Screen capture in 3D
-da3d screen3d-viewer
+uv run da3d screen3d-viewer
 
 # View static depth map in 3D
-da3d view3d image.jpg depth.png
+uv run da3d view3d image.jpg depth.png
 
 # 2.5D parallax effects
-da3d screen3d --auto-rotate
+uv run da3d screen3d --auto-rotate
 ```
 
 ### Model Checkpoints
