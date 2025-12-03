@@ -1,0 +1,40 @@
+# Ready-to-test projection configuration with default fullscreen mapping
+
+projectors:
+  main:
+    display_index: 1
+    resolution: [1920, 1080]
+
+surfaces:
+  wall_main:
+    projector: main
+    type: flat
+    # Default fullscreen coordinates: [top-left, top-right, bottom-right, bottom-left]
+    dst_quad_pixels: [[0, 0], [1920, 0], [1920, 1080], [0, 1080]]
+
+content_sources:
+  test_pattern:
+    type: image
+    file: "assets/test_pattern.png"
+    light_vignette: true
+
+  lobby_test:
+    type: lobby_scene
+    scene_asset: "assets/lobby_cube.obj"
+
+shows:
+  test_pattern_show:
+    loop: true
+    scenes:
+      - at: 0
+        surface: wall_main
+        content_layers:
+          - source: test_pattern
+
+  lobby_show:
+    loop: true
+    scenes:
+      - at: 0
+        surface: wall_main
+        content_layers:
+          - source: lobby_test
