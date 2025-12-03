@@ -520,6 +520,12 @@ uv run da3d webcam3d --subsample 2 --max-res 640 --smooth
 
 ## Documentation
 
+### Quick Start
+- 🚀 **[Testing Quickstart](TESTING_QUICKSTART.md)** - Test each feature with available assets
+- 📦 **[Models Guide](MODELS.md)** - Download and configure depth models
+- 📋 **[Feature Asset Audit](FEATURE_ASSET_AUDIT.md)** - Complete asset inventory
+
+### Detailed Guides
 - 📖 [Getting Started Guide](docs/getting_started.md)
 - 🎥 [Real-time 3D Viewing](docs/guides/realtime_3d.md)
 - 🖼️ [Static 3D Viewing](docs/guides/static_viewing.md)

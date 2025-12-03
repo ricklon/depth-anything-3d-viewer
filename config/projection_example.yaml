@@ -16,16 +16,19 @@ content_sources:
     file: "assets/test_pattern.png"
     light_vignette: true
 
-  depth_art:
-    type: depth_image
-    rgb: "assets/art_rgb.jpg"
-    depth: "assets/art_depth.png"
   lobby_test:
     type: lobby_scene
     scene_asset: "assets/lobby_cube.obj"
 
+  # Example depth_image source (requires art assets)
+  # Uncomment and add your own art_rgb.jpg and art_depth.png to assets/
+  # depth_art:
+  #   type: depth_image
+  #   rgb: "assets/art_rgb.jpg"
+  #   depth: "assets/art_depth.png"
+
 shows:
-  gallery_demo:
+  test_pattern_show:
     loop: true
     scenes:
       - at: 0
@@ -33,10 +36,19 @@ shows:
         content_layers:
           - source: test_pattern
 
-  lobby_demo:
+  lobby_show:
     loop: true
     scenes:
       - at: 0
         surface: wall_main
         content_layers:
           - source: lobby_test
+
+  # Example depth art show (requires depth_art source above)
+  # depth_art_show:
+  #   loop: true
+  #   scenes:
+  #     - at: 0
+  #       surface: wall_main
+  #       content_layers:
+  #         - source: depth_art
